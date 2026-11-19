@@ -1,5 +1,6 @@
 [
   {"name":"1-afterglow.jpg","query":"?poster&caption=NEON%20FELONY&size=landscape","w":1280,"h":720},
   {"name":"2-studio.jpg","query":"?size=landscape&panel=1","w":1280,"h":1100},
-  {"name":"3-stories.jpg","query":"?poster&caption=TIDAL%20SHIFT&photo=pier&size=story","w":720,"h":1280}
+  {"name":"3-stories.jpg","query":"?poster&caption=TIDAL%20SHIFT&photo=pier&size=story","w":720,"h":1280},
+  {"name":"4-midnight.jpg","query":"?poster&caption=MIDNIGHT%20RUN&photo=pier&size=landscape","w":1280,"h":720}
 ]
