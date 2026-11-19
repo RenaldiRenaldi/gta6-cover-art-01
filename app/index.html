@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#110c20">
+  <title>Vice City Afterglow — cover lab</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main class="workspace">
+    <header class="masthead">
+      <a class="brand" href="#" aria-label="Afterglow studio"><span class="brand-mark">✳</span> AFTERGLOW <span class="brand-lab">COVER LAB</span></a>
+      <div class="offline"><span></span> PRIVATE · OFFLINE</div>
+    </header>
+    <section class="stage" aria-label="Your cover art">
+      <canvas id="art" width="1440" height="900" aria-label="Live cover preview"></canvas>
+      <div class="stage-tag"><span>✦</span> YOUR CITY. YOUR STORY.</div>
+      <button id="save" class="save-button">↓ <span>DOWNLOAD PNG</span></button>
+    </section>
+    <section class="controls">
+      <div class="intro"><div class="eyebrow">A POSTER, BUILT FROM YOUR PHOTOS</div><div class="headline">Set the scene<span>.</span></div><div class="subline">Drop a photo in. Build a multi-frame city story. Keep every pixel local.</div></div>
+      <div class="control-grid">
+        <section class="control-card photo-card">
+          <div class="card-heading"><span class="step">01</span><span>YOUR PHOTOS</span><span id="photo-count" class="muted">Loading photos</span></div>
+          <label class="upload-button" for="upload">＋ <span>Add your photos</span><input id="upload" type="file" accept="image/*" multiple></label>
+          <div id="photo-library" class="photo-library"></div>
+          <p class="hint">Choose a frame, then choose a photo. Photos never leave this device.</p>
+        </section>
+        <section class="control-card story-card">
+          <div class="card-heading"><span class="step">02</span><span>YOUR HEADLINE</span><span class="muted">CONDENSED / IMPACT</span></div>
+          <label class="sr-only" for="caption">Cover title</label><input id="caption" class="caption-input" maxlength="28" value="NEON FELONY" autocomplete="off">
+          <div class="caption-foot"><span>YOUR STORY IN LIGHTS</span><span id="char-count">11 / 28</span></div>
+          <div class="frame-label">PANEL CROP <span id="active-name">TOP LEFT</span></div>
+          <label class="range-label" for="zoom">Zoom <span id="zoom-value">1.0×</span></label><input id="zoom" type="range" min="1" max="2.6" step="0.01" value="1">
+          <label class="range-label" for="focus-x">Horizontal <span id="x-value">50%</span></label><input id="focus-x" type="range" min="0" max="100" value="50">
+          <label class="range-label" for="focus-y">Vertical <span id="y-value">50%</span></label><input id="focus-y" type="range" min="0" max="100" value="50">
+        </section>
+      </div>
+      <div class="export-bar"><div class="export-copy"><span class="eyebrow">READY FOR YOUR FEED</span><strong>Pick a size. Get a PNG.</strong></div><div class="size-buttons" id="sizes"><button data-size="square"><span>1 : 1</span><small>SQUARE</small></button><button class="selected" data-size="portrait"><span>4 : 5</span><small>PORTRAIT</small></button><button data-size="story"><span>9 : 16</span><small>STORY</small></button><button data-size="landscape"><span>16 : 9</span><small>LANDSCAPE</small></button></div><button id="export" class="export-button">EXPORT COVER <span>↗</span></button></div>
+      <div class="fineprint"><span>DESIGNED IN THE SUNSET STATE <i>✳</i></span><span>NO CLOUD. NO UPLOAD. JUST YOUR COVER.</span></div>
+    </section>
+  </main>
+  <script type="module" src="/src/app.js"></script>
+</body>
+</html>
