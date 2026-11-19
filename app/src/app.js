@@ -401,6 +401,7 @@ function setCropValue(name) {
 async function start() {
   const params = new URLSearchParams(location.search);
   const poster = params.has('poster');
+  if (poster) document.body.classList.add('poster-view');
   treatment.grade = params.get('grade') || treatment.grade;
   treatment.layout = params.get('layout') || treatment.layout;
   treatment.style = params.get('style') || treatment.style;
@@ -410,7 +411,6 @@ async function start() {
   treatment.grain = params.get('grain') !== 'off';
   treatment.vignette = params.get('vignette') !== 'off';
   if (!poster) document.body.classList.add('editing');
-  if (poster) document.body.classList.add('poster-view');
   if (params.has('caption')) captionInput.value = params.get('caption').slice(0, 28);
   document.querySelector('#subcaption').value = params.get('sub') || 'Vice City';
   document.querySelector('#kicker').value = params.get('kicker') || 'Welcome to';
