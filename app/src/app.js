@@ -235,7 +235,7 @@ function drawCover() {
   ink.fillRect(0, 0, width, height);
   const points = coverFrames(width, height);
   activeFrame = Math.min(activeFrame, points.length - 1);
-  frames = points.map((shape, index) => frames[index] || { points: shape, photo: index % photos.length, zoom: 1 + (index % 3) * .13, x: 26 + (index * 23) % 52, y: 15 + (index * 31) % 70 });
+  frames = points.map((shape, index) => frames[index] || (index % 2 ? { points: shape, photo: index % photos.length, zoom: .68, x: 5, y: 2 } : { points: shape, photo: index % photos.length, zoom: 1 + (index % 3) * .13, x: 26 + (index * 23) % 52, y: 15 + (index * 31) % 70 }));
   frames.forEach((frame, index) => { frame.points = points[index]; paintPhoto(frame, width, height); });
   posterInk(width, height);
   const edge = Math.min(width, height) * .009;
@@ -426,7 +426,7 @@ async function start() {
   document.querySelector('#badge-toggle').checked = treatment.badge;
   try { photos = await Promise.all(initialPhotos.map(loadPhoto)); } catch { photos = []; }
   if (poster && params.get('photo') === 'pier' && photos.length > 1) {
-    frames = coverFrames(1280, 720).map((points, index) => ({ points, photo: index % 2 ? 0 : 1, zoom: 1.04 + (index % 3) * .18, x: 24 + (index * 29) % 58, y: 14 + (index * 25) % 72, grade: index === Number(params.get('panelGradeIndex')) ? params.get('panelGrade') : undefined }));
+    frames = coverFrames(1280, 720).map((points, index) => ({ points, photo: index % 2 ? 0 : 1, zoom: .60, x: 5, y: 2, grade: index === Number(params.get('panelGradeIndex')) ? params.get('panelGrade') : undefined }));
   }
   const selected = params.get('size');
   if (selected && sizes[selected]) setFormat(selected); else setFormat('landscape');
