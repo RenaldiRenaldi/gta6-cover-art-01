@@ -4,6 +4,15 @@ const photoLibrary = document.querySelector('#photo-library');
 const captionInput = document.querySelector('#caption');
 const knobs = { zoom: document.querySelector('#zoom'), x: document.querySelector('#focus-x'), y: document.querySelector('#focus-y') };
 const sizes = { square: [1080, 1080], portrait: [1080, 1350], story: [1080, 1920], landscape: [1920, 1080] };
+const gradePresets = {
+  sunset: { name: 'Vice Sunset', filter: 'saturate(1.35) contrast(1.18)', colors: ['#a63bdb', '#f45c92', '#492192'], opacity: .43 },
+  night: { name: 'Neon Night', filter: 'saturate(.8) contrast(1.28) brightness(.48)', colors: ['#081a6b', '#174ba8', '#070e3b'], opacity: .64 },
+  golden: { name: 'Golden Hour', filter: 'saturate(1.32) contrast(1.08) brightness(1.015)', colors: ['#ffae68', '#ee4994', '#34d6de'], opacity: .27 },
+  mono: { name: 'Chrome Mono', filter: 'grayscale(1) contrast(1.35)', colors: ['#accbd8', '#596c85', '#172437'], opacity: .24 },
+};
+const layoutPresets = { mosaic: 'Mosaic · 6', strip: 'Slant · 4', seven: 'Mosaic · 7', hero: 'Hero · 5' };
+const captionStyles = { gloss: 'Afterglow Gloss', chrome: 'Liquid Chrome', tube: 'Electric Script', band: 'Skyline Block' };
+const treatment = { grade: 'sunset', strength: .85, layout: 'mosaic', style: 'gloss', ink: .16, grain: true, vignette: true, badge: true };
 const initialPhotos = [
   { name: 'Sunset Boulevard', src: '/samples/boulevard.jpg' },
   { name: 'Blue Hour Pier', src: '/samples/pier.jpg' },
@@ -24,12 +33,31 @@ function loadPhoto(record) {
 }
 
 function coverFrames(width, height) {
-  const ratio = width / height;
-  if (ratio > 1.25) return [
+  const landscape = width / height > 1.25;
+  if (treatment.layout === 'hero') return [
+    [[0,0],[.62,0],[.59,.68],[0,.68]], [[.64,0],[1,0],[1,.32],[.62,.32]],
+    [[.63,.34],[1,.34],[1,.68],[.60,.68]], [[0,.70],[.48,.70],[.45,1],[0,1]],
+    [[.50,.70],[1,.70],[1,1],[.47,1]],
+  ];
+  if (treatment.layout === 'seven') return [
+    [[0,0],[.55,0],[.51,.65],[0,.65]],
+    [[.57,0],[.78,0],[.76,.32],[.55,.32]],
+    [[.80,0],[1,0],[1,.32],[.78,.32]],
+    [[.55,.34],[1,.34],[1,.65],[.53,.65]],
+    [[0,.67],[.32,.67],[.29,1],[0,1]],
+    [[.34,.67],[.65,.67],[.62,1],[.31,1]],
+    [[.67,.67],[1,.67],[1,1],[.64,1]],
+  ];
+  if (treatment.layout === 'strip') return [
     [[0, 0], [.66, 0], [.57, 1], [0, 1]],
     [[.68, 0], [1, 0], [1, .48], [.64, .48]],
     [[.65, .50], [1, .50], [1, .76], [.62, .76]],
     [[.60, .78], [1, .78], [1, 1], [.56, 1]],
+  ];
+  if (landscape) return [
+    [[0,0],[.50,0],[.46,1],[0,1]], [[.52,0],[.75,0],[.73,.30],[.50,.30]],
+    [[.77,0],[1,0],[1,.30],[.75,.30]], [[.50,.32],[1,.32],[1,.61],[.48,.61]],
+    [[.48,.63],[.73,.63],[.70,1],[.46,1]], [[.75,.63],[1,.63],[1,1],[.72,1]],
   ];
   return [
     [[0, 0], [.62, 0], [.58, .48], [0, .48]],
@@ -66,16 +94,62 @@ function paintPhoto(frame, width, height) {
   pathFor(frame.points, width, height);
   ink.save();
   ink.clip();
-  ink.filter = 'saturate(1.32) contrast(1.08) brightness(1.015)';
-  ink.drawImage(image, left, top, drawWidth, drawHeight);
+  applyColourGrade(frame, box, () => ink.drawImage(image, left, top, drawWidth, drawHeight));
+  ink.restore();
+}
+
+function applyColourGrade(frame, box, paint) {
+  const grade = gradePresets[frame.grade === 'global' || !frame.grade ? treatment.grade : frame.grade] || gradePresets[treatment.grade];
+  ink.save();
   ink.filter = 'none';
-  const warm = ink.createLinearGradient(box.x, box.y, box.x + box.w, box.y + box.h);
-  warm.addColorStop(0, 'rgba(255,174,104,.31)');
-  warm.addColorStop(.42, 'rgba(238,73,148,.13)');
-  warm.addColorStop(1, 'rgba(52,214,222,.28)');
-  ink.fillStyle = warm;
+  ink.globalAlpha = 1;
+  paint();
+  ink.filter = grade.filter;
+  ink.globalAlpha = treatment.strength;
+  paint();
+  ink.filter = 'none';
+  ink.globalAlpha = 1;
+  const overlay = ink.createLinearGradient(box.x, box.y, box.x + box.w, box.y + box.h);
+  grade.colors.forEach((color, index) => overlay.addColorStop(index / 2, color));
+  ink.globalAlpha = grade.opacity * treatment.strength;
+  ink.globalCompositeOperation = 'color';
+  ink.fillStyle = overlay;
+  ink.fillRect(box.x, box.y, box.w, box.h);
+  ink.globalCompositeOperation = 'source-over';
+  ink.globalAlpha = .18 * treatment.strength;
   ink.fillRect(box.x, box.y, box.w, box.h);
   ink.restore();
+}
+
+function posterInk(width, height) {
+  ink.save();
+  const step = Math.max(5, Math.min(width, height) / 92);
+  ink.fillStyle = `rgba(16,5,36,${treatment.ink})`;
+  if (treatment.ink > 0) for (let y = 0; y < height; y += step) for (let x = 0; x < width; x += step) {
+    ink.beginPath(); ink.arc(x + (Math.round(y / step) % 2) * step / 2, y, step * .19, 0, Math.PI * 2); ink.fill();
+  }
+  if (treatment.grain) {
+    ink.fillStyle = '#fff3db'; ink.globalAlpha = .065;
+    for (let i = 0; i < 9500; i++) ink.fillRect((i * 7919 % width), (i * 3571 % height), 1.5, 1.5);
+  }
+  if (treatment.vignette) {
+    ink.globalAlpha = 1;
+    const shade = ink.createRadialGradient(width / 2, height / 2, height * .1, width / 2, height / 2, Math.max(width, height) * .65);
+    shade.addColorStop(0, 'transparent'); shade.addColorStop(1, '#09031ba8');
+    ink.fillStyle = shade; ink.fillRect(0, 0, width, height);
+  }
+  ink.restore();
+}
+
+function drawStarburst(width, height) {
+  if (!treatment.badge) return;
+  const radius = Math.min(width, height) * .087;
+  ink.save(); ink.translate(width * .87, height * .20); ink.rotate(.13);
+  ink.beginPath();
+  for (let i = 0; i < 32; i++) { const a = i * Math.PI / 16; const r = radius * (i % 2 ? .81 : 1); ink.lineTo(Math.cos(a) * r, Math.sin(a) * r); }
+  ink.closePath(); ink.fillStyle = '#ffd97c'; ink.strokeStyle = '#25102f'; ink.lineWidth = radius * .07; ink.fill(); ink.stroke();
+  ink.textAlign = 'center'; ink.fillStyle = '#25102f'; ink.font = `950 ${radius * .36}px Arial`; ink.fillText('NEW', 0, 0);
+  ink.font = `900 ${radius * .16}px Arial`; ink.fillText('SUMMER 2026', 0, radius * .28); ink.restore();
 }
 
 function outlineType(text, x, y, size, maxWidth, color, weight = 950) {
@@ -101,14 +175,9 @@ function titleTreatment(width, height) {
   const compact = width / height < .85;
   const base = Math.min(width * (compact ? .12 : .108), height * .19);
   const title = (captionInput.value.trim() || 'YOUR STORY').toUpperCase();
-  const splitAt = Math.ceil(title.length / 2);
   let first = title;
-  let second = 'VICE CITY';
-  if (compact && title.length > 15) {
-    first = title.slice(0, splitAt);
-    second = title.slice(splitAt);
-  }
-  const y = height * (compact ? .84 : .74);
+  const second = document.querySelector('#subcaption').value.trim();
+  const y = height * (compact ? .78 : .74);
   ink.save();
   const shadow = ink.createLinearGradient(0, y - base * 1.65, 0, height);
   shadow.addColorStop(0, 'rgba(9,8,21,0)');
@@ -116,19 +185,40 @@ function titleTreatment(width, height) {
   shadow.addColorStop(1, 'rgba(10,8,20,.72)');
   ink.fillStyle = shadow;
   ink.fillRect(0, y - base * 1.8, width, height - y + base * 1.8);
+  if (treatment.style === 'band') {
+    const band = ink.createLinearGradient(0, y - base, width, height);
+    band.addColorStop(0, '#df3085'); band.addColorStop(1, '#35136c');
+    ink.fillStyle = band; ink.fillRect(0, y - base * 1.3, width, height);
+    ink.fillStyle = '#160c32';
+    for (let i = 0; i < 36; i++) { const h = base * (.15 + (i * 7 % 11) / 15); ink.fillRect(i * width / 35, height - h, width / 30, h); }
+  }
   ink.shadowColor = '#ff4f9a';
   ink.shadowBlur = Math.min(width, height) * .018;
   ink.shadowOffsetX = -width * .004;
   ink.shadowOffsetY = height * .008;
-  outlineType(first, width * .047, y - base * .14, base, width * .88, '#fff3e7');
-  outlineType(second, width * .047, y + base * .78, base, width * .91, '#fff3e7');
+  const gloss = ink.createLinearGradient(0, y - base, 0, y);
+  const colors = treatment.style === 'chrome' ? ['#fffef3','#a1edff','#263c66','#fff4ff'] : ['#fff5b5','#ffc778','#ff72b9','#bc51e1'];
+  if (treatment.style === 'tube') { ink.shadowColor = '#75ffed'; ink.shadowBlur = base * .18; }
+  if (treatment.style === 'band') { ink.shadowColor = '#ff70bc'; ink.shadowBlur = base * .04; }
+  colors.forEach((color, index) => gloss.addColorStop(index / 3, color));
+  ink.font = `800 ${base * .17}px Arial`;
+  ink.fillStyle = '#ffd4e5';
+  ink.fillText(document.querySelector('#kicker').value.toUpperCase(), width * .055, y - base * 1.23);
+  outlineType(first, width * .047, y - base * .14, base, width * .90, gloss);
+  ink.font = `italic 900 ${base * .92}px "Brush Script MT", "Segoe Script", cursive`;
+  const scriptWidth = ink.measureText(second).width;
+  ink.save(); ink.translate(width * .08, y + base * .76);
+  ink.scale(Math.min(1, width * .82 / Math.max(1, scriptWidth)), 1);
+  ink.strokeStyle = '#25102f'; ink.lineWidth = base * .065; ink.strokeText(second, 0, 0);
+  ink.fillStyle = treatment.style === 'tube' ? '#a7fff1' : '#fff0f7'; ink.fillText(second, 0, 0); ink.restore();
   ink.shadowColor = 'transparent';
   ink.shadowBlur = 0;
   const labelSize = Math.max(10, Math.min(width, height) * .017);
   ink.font = `800 ${labelSize}px Arial, sans-serif`;
   ink.letterSpacing = `${labelSize * .26}px`;
   ink.fillStyle = '#ff75ac';
-  ink.fillText('A VICE CITY STORY  /  SUNSET DIVISION', width * .053, y + base * 1.04);
+  ink.letterSpacing = `${labelSize * .10}px`;
+  ink.fillText(document.querySelector('#tagline').value.toUpperCase(), width * .053, Math.min(height * .945, y + base * 1.12), width * .88);
   ink.restore();
 }
 
@@ -145,8 +235,9 @@ function drawCover() {
   ink.fillRect(0, 0, width, height);
   const points = coverFrames(width, height);
   activeFrame = Math.min(activeFrame, points.length - 1);
-  frames = points.map((shape, index) => frames[index] || { points: shape, photo: index % photos.length, zoom: 1, x: 50, y: 28 });
-  frames.forEach((frame) => { frame.points = points[frames.indexOf(frame)]; paintPhoto(frame, width, height); });
+  frames = points.map((shape, index) => frames[index] || { points: shape, photo: index % photos.length, zoom: 1 + (index % 3) * .13, x: 26 + (index * 23) % 52, y: 15 + (index * 31) % 70 });
+  frames.forEach((frame, index) => { frame.points = points[index]; paintPhoto(frame, width, height); });
+  posterInk(width, height);
   const edge = Math.min(width, height) * .009;
   ink.lineJoin = 'miter';
   ink.strokeStyle = '#fff1dc';
@@ -160,6 +251,7 @@ function drawCover() {
   ink.lineWidth = Math.max(2, edge * .28);
   ink.strokeRect(titlePad * 1.35, titlePad * 1.35, width - titlePad * 2.7, height - titlePad * 2.7);
   titleTreatment(width, height);
+  drawStarburst(width, height);
   const stamp = Math.min(width, height) * .012;
   ink.font = `900 ${stamp}px Arial, sans-serif`;
   ink.letterSpacing = `${stamp * .19}px`;
@@ -192,6 +284,11 @@ function showFrameControls() {
   knobs.zoom.value = frame.zoom;
   knobs.x.value = frame.x;
   knobs.y.value = frame.y;
+  document.querySelector('#panel-grade').value = frame.grade || 'global';
+  document.querySelector('#grade-strength-value').textContent = `${Math.round(treatment.strength * 100)}%`;
+  document.querySelector('#ink-strength-value').textContent = `${Math.round(treatment.ink * 100)}%`;
+  document.querySelector('#panel-grade option[value="global"]').textContent = `Global · ${gradePresets[treatment.grade].name}`;
+  document.querySelector('#frame-name').textContent = `FRAME ${String(activeFrame + 1).padStart(2, '0')} / ${frames.length}`;
   document.querySelector('#zoom-value').textContent = `${Number(frame.zoom).toFixed(1)}×`;
   document.querySelector('#x-value').textContent = `${Math.round(frame.x)}%`;
   document.querySelector('#y-value').textContent = `${Math.round(frame.y)}%`;
@@ -239,6 +336,28 @@ function rebuildLibrary() {
   document.querySelector('#photo-count').textContent = `${photos.length} loaded`;
 }
 
+function fillAllPanels() {
+  if (!photos.length || !frames.length) return;
+  const photoIndex = frames[activeFrame].photo;
+  frames.forEach((frame) => { frame.photo = photoIndex; });
+  rebuildLibrary();
+  drawCover();
+}
+
+function autoFillPanels() {
+  if (!photos.length || !frames.length) return;
+  frames.forEach((frame, index) => { frame.photo = index % photos.length; });
+  rebuildLibrary();
+  drawCover();
+}
+
+function shufflePanels() {
+  if (!photos.length || !frames.length) return;
+  frames.forEach((frame) => { frame.photo = Math.floor(Math.random() * photos.length); });
+  rebuildLibrary();
+  drawCover();
+}
+
 function exportCover() {
   const [width, height] = sizes[outputSize];
   const previous = [canvas.width, canvas.height];
@@ -282,15 +401,39 @@ function setCropValue(name) {
 async function start() {
   const params = new URLSearchParams(location.search);
   const poster = params.has('poster');
+  treatment.grade = params.get('grade') || treatment.grade;
+  treatment.layout = params.get('layout') || treatment.layout;
+  treatment.style = params.get('style') || treatment.style;
+  treatment.ink = params.has('ink') ? Number(params.get('ink')) : treatment.ink;
+  treatment.strength = params.has('strength') ? Number(params.get('strength')) : treatment.strength;
+  treatment.badge = params.get('badge') !== 'off';
+  treatment.grain = params.get('grain') !== 'off';
+  treatment.vignette = params.get('vignette') !== 'off';
   if (!poster) document.body.classList.add('editing');
   if (poster) document.body.classList.add('poster-view');
   if (params.has('caption')) captionInput.value = params.get('caption').slice(0, 28);
+  document.querySelector('#subcaption').value = params.get('sub') || 'Vice City';
+  document.querySelector('#kicker').value = params.get('kicker') || 'Welcome to';
+  document.querySelector('#tagline').value = params.get('tagline') || 'A Vice City story  /  Sunset Division';
+  document.querySelectorAll('[data-grade]').forEach((chip) => chip.classList.toggle('selected', chip.dataset.grade === treatment.grade));
+  document.querySelectorAll('[data-layout]').forEach((chip) => chip.classList.toggle('selected', chip.dataset.layout === treatment.layout));
+  document.querySelectorAll('[data-style]').forEach((chip) => chip.classList.toggle('selected', chip.dataset.style === treatment.style));
+  document.querySelector('#grade-strength').value = treatment.strength * 100;
+  document.querySelector('#ink-strength').value = treatment.ink * 100;
+  document.querySelector('#ink-toggle').checked = treatment.ink > 0;
+  document.querySelector('#grain-toggle').checked = treatment.grain;
+  document.querySelector('#vignette-toggle').checked = treatment.vignette;
+  document.querySelector('#badge-toggle').checked = treatment.badge;
   try { photos = await Promise.all(initialPhotos.map(loadPhoto)); } catch { photos = []; }
   if (poster && params.get('photo') === 'pier' && photos.length > 1) {
-    frames = coverFrames(1280, 720).map((points, index) => ({ points, photo: index ? 0 : 1, zoom: 1.08, x: index ? 52 : 48, y: 26 }));
+    frames = coverFrames(1280, 720).map((points, index) => ({ points, photo: index % 2 ? 0 : 1, zoom: 1.04 + (index % 3) * .18, x: 24 + (index * 29) % 58, y: 14 + (index * 25) % 72, grade: index === Number(params.get('panelGradeIndex')) ? params.get('panelGrade') : undefined }));
   }
   const selected = params.get('size');
   if (selected && sizes[selected]) setFormat(selected); else setFormat('landscape');
+  if (params.has('panelGradeIndex')) {
+    const index = Number(params.get('panelGradeIndex'));
+    if (frames[index]) { frames[index].grade = params.get('panelGrade') || treatment.grade; drawCover(); }
+  }
   rebuildLibrary();
   if (params.has('panel') && Number.isInteger(Number(params.get('panel')))) activeFrame = Number(params.get('panel')) % frames.length;
   showFrameControls();
@@ -309,6 +452,40 @@ async function start() {
     document.querySelector('#char-count').textContent = `${captionInput.value.length} / 28`;
     drawCover();
   });
+  ['subcaption', 'kicker', 'tagline'].forEach((id) => document.querySelector(`#${id}`).addEventListener('input', drawCover));
+  document.querySelector('#grades').addEventListener('click', (event) => {
+    const button = event.target.closest('[data-grade]'); if (!button) return;
+    treatment.grade = button.dataset.grade;
+    document.querySelectorAll('[data-grade]').forEach((chip) => chip.classList.toggle('selected', chip === button));
+    showFrameControls();
+  });
+  document.querySelector('#layouts').addEventListener('click', (event) => {
+    const button = event.target.closest('[data-layout]'); if (!button) return;
+    treatment.layout = button.dataset.layout;
+    document.querySelectorAll('[data-layout]').forEach((chip) => chip.classList.toggle('selected', chip === button));
+    activeFrame = 0; drawCover(); showFrameControls();
+  });
+  document.querySelector('#caption-styles').addEventListener('click', (event) => {
+    const button = event.target.closest('[data-style]'); if (!button) return;
+    treatment.style = button.dataset.style;
+    document.querySelectorAll('[data-style]').forEach((chip) => chip.classList.toggle('selected', chip === button)); drawCover();
+  });
+  document.querySelector('#grade-strength').addEventListener('input', (event) => {
+    treatment.strength = Number(event.target.value) / 100;
+    document.querySelector('#grade-strength-value').textContent = `${event.target.value}%`;
+    drawCover();
+  });
+  document.querySelector('#ink-strength').addEventListener('input', (event) => {
+    treatment.ink = document.querySelector('#ink-toggle').checked ? Number(event.target.value) / 100 : 0;
+    document.querySelector('#ink-strength-value').textContent = `${event.target.value}%`;
+    drawCover();
+  });
+  document.querySelector('#ink-toggle').addEventListener('change', (event) => { treatment.ink = event.target.checked ? Number(document.querySelector('#ink-strength').value) / 100 : 0; drawCover(); });
+  [['grain-toggle','grain'],['vignette-toggle','vignette'],['badge-toggle','badge']].forEach(([id, key]) => document.querySelector(`#${id}`).addEventListener('change', (event) => { treatment[key] = event.target.checked; drawCover(); }));
+  document.querySelector('#panel-grade').addEventListener('change', (event) => { frames[activeFrame].grade = event.target.value === 'global' ? undefined : event.target.value; drawCover(); });
+  document.querySelector('#fill-all').addEventListener('click', fillAllPanels);
+  document.querySelector('#auto-fill').addEventListener('click', autoFillPanels);
+  document.querySelector('#shuffle').addEventListener('click', shufflePanels);
   document.querySelector('#upload').addEventListener('change', async (event) => {
     for (const file of event.target.files) {
       if (!file.type.startsWith('image/')) continue;

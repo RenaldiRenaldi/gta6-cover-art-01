@@ -6,6 +6,12 @@
   <meta name="theme-color" content="#110c20">
   <title>Vice City Afterglow — cover lab</title>
   <link rel="stylesheet" href="/style.css">
+  <style>
+    .flow{display:flex;gap:10px;align-items:center;margin:5px 0 11px;color:#fff1df;font-size:11px;font-weight:900;letter-spacing:.4px}.flow span{padding:6px 10px;border:1px solid #563e5e;border-radius:16px;background:#21172d}.flow span:first-child{border-color:#ff65a8;color:#ffb3d0}.flow i{color:#ff6da9;font-size:17px;font-style:normal}
+    .photo-actions{display:flex;gap:6px;margin-top:8px}.photo-actions button,.grade-chips button,.style-chips button{border:1px solid #55465d;border-radius:3px;background:#21192e;color:#eee1ef;padding:7px 8px;font-size:8px;font-weight:900;letter-spacing:.3px;cursor:pointer}.photo-actions button:hover,.grade-chips button:hover,.style-chips button:hover{border-color:#ff71ad;color:#fff}.field-label{display:block;margin-top:9px;margin-bottom:4px;color:#a99caf;font-size:8px;font-weight:900;letter-spacing:1.2px;text-transform:uppercase}.text-field,.grade-select{width:100%;height:27px;border:1px solid #51405c;border-radius:3px;background:#100c1d;color:#fff0e8;padding:0 8px;font-size:10px}.field-pair{display:grid;grid-template-columns:1fr 1fr;gap:7px}.field-pair label{color:#a99caf;font-size:8px}.field-pair .text-field{margin-top:3px}
+    .layout-chips{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.layout-chips button{display:grid;gap:4px;justify-items:center;padding:5px 3px;border:1px solid #4b3e56;border-radius:3px;background:#211a2d;color:#ddd1e2;cursor:pointer}.layout-chips button.selected,.grade-chips button.selected,.style-chips button.selected{border-color:#ff64a7;background:#44203e;color:#fff}.layout-chips b{font-size:7px;white-space:nowrap}.layout-icon{width:42px;height:24px;display:grid;gap:2px;background:#0d0a16;padding:2px}.layout-icon i{display:block;background:#f878a9}.mosaic-icon{grid-template-columns:1.3fr 1fr 1fr;grid-template-rows:1fr 1fr}.mosaic-icon i:first-child{grid-row:span 2;background:#f2b15f}.strip-icon{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}.strip-icon i:first-child{grid-row:span 2}.seven-icon{grid-template-columns:repeat(3,1fr);grid-template-rows:1fr 1fr 1fr}.seven-icon i:first-child{grid-row:span 2}.hero-icon{grid-template-columns:1.5fr 1fr;grid-template-rows:1fr 1fr}.hero-icon i:first-child{grid-row:span 2;background:#ffba73}
+    .control-grid{grid-template-columns:.82fr 1fr 1.2fr;align-items:stretch}.grade-chips,.style-chips{display:flex;flex-wrap:wrap;gap:5px}.grade-chips button{flex:1;min-width:70px;padding:6px 4px;font-size:7px}.style-chips button{flex:1;min-width:80px;font-size:7px}.style-card{grid-column:auto}.toggle-line{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0;color:#cfc2d4;font-size:8px;font-weight:800}.toggle-line input{accent-color:#ff64a7}.badge-line{padding:7px 8px;border:1px dashed #66516c;border-radius:3px}.story-card{min-height:250px}.grade-select:focus,.text-field:focus{outline:1px solid #ff71ad}@media(max-width:760px){.control-grid{grid-template-columns:1fr}.style-card{grid-column:auto}.layout-chips{grid-template-columns:repeat(2,1fr)}.flow{font-size:9px;gap:5px}}
+  </style>
 </head>
 <body>
   <main class="workspace">
@@ -13,6 +19,7 @@
       <a class="brand" href="#" aria-label="Afterglow studio"><span class="brand-mark">✳</span> AFTERGLOW <span class="brand-lab">COVER LAB</span></a>
       <div class="offline"><span></span> PRIVATE · OFFLINE</div>
     </header>
+    <div class="flow"><span>1 Add photos</span><i>·</i><span>2 Pick layout + grade</span><i>·</i><span>3 Export</span></div>
     <section class="stage" aria-label="Your cover art">
       <canvas id="art" width="1440" height="900" aria-label="Live cover preview"></canvas>
       <div class="stage-tag"><span>✦</span> YOUR CITY. YOUR STORY.</div>
@@ -25,16 +32,35 @@
           <div class="card-heading"><span class="step">01</span><span>YOUR PHOTOS</span><span id="photo-count" class="muted">Loading photos</span></div>
           <label class="upload-button" for="upload">＋ <span>Add your photos</span><input id="upload" type="file" accept="image/*" multiple></label>
           <div id="photo-library" class="photo-library"></div>
+          <div class="photo-actions"><button id="fill-all" type="button">Use in all panels</button><button id="auto-fill" type="button">Auto-fill</button><button id="shuffle" type="button">Shuffle</button></div>
           <p class="hint">Choose a frame, then choose a photo. Photos never leave this device.</p>
         </section>
         <section class="control-card story-card">
-          <div class="card-heading"><span class="step">02</span><span>YOUR HEADLINE</span><span class="muted">CONDENSED / IMPACT</span></div>
+          <div class="card-heading"><span class="step">02</span><span>YOUR HEADLINE</span><span class="muted">CAPTION STUDIO</span></div>
           <label class="sr-only" for="caption">Cover title</label><input id="caption" class="caption-input" maxlength="28" value="NEON FELONY" autocomplete="off">
+          <label class="field-label" for="subcaption">Script second line</label><input id="subcaption" class="text-field" maxlength="24" value="Vice City">
+          <div class="field-pair"><label><span>Kicker</span><input id="kicker" class="text-field" maxlength="20" value="Welcome to"></label><label><span>Tagline</span><input id="tagline" class="text-field" maxlength="46" value="A Vice City story / Sunset Division"></label></div>
           <div class="caption-foot"><span>YOUR STORY IN LIGHTS</span><span id="char-count">11 / 28</span></div>
-          <div class="frame-label">PANEL CROP <span id="active-name">TOP LEFT</span></div>
+          <div class="frame-label"><span>PANEL CROP · <b id="frame-name">FRAME 01 / 6</b></span><span id="active-name">SUNSET BOULEVARD</span></div>
+          <label class="field-label" for="panel-grade">Grade: this panel</label><select id="panel-grade" class="grade-select"><option value="global">Global · Vice Sunset</option><option value="sunset">Vice Sunset</option><option value="night">Neon Night</option><option value="golden">Golden Hour</option><option value="mono">Chrome Mono</option></select>
           <label class="range-label" for="zoom">Zoom <span id="zoom-value">1.0×</span></label><input id="zoom" type="range" min="1" max="2.6" step="0.01" value="1">
           <label class="range-label" for="focus-x">Horizontal <span id="x-value">50%</span></label><input id="focus-x" type="range" min="0" max="100" value="50">
           <label class="range-label" for="focus-y">Vertical <span id="y-value">50%</span></label><input id="focus-y" type="range" min="0" max="100" value="50">
+        </section>
+        <section class="control-card style-card" aria-label="Layout, colour grade, print effects and caption style">
+          <div class="card-heading"><span class="step">03</span><span>LAYOUT + FINISH</span></div>
+          <div class="field-label">LAYOUT</div><div class="layout-chips" id="layouts">
+            <button data-layout="mosaic" type="button" class="selected" aria-label="Mosaic layout, six panels"><span class="layout-icon mosaic-icon"><i></i><i></i><i></i><i></i><i></i><i></i></span><b>Mosaic · 6</b></button>
+            <button data-layout="strip" type="button" aria-label="Slant layout, four panels"><span class="layout-icon strip-icon"><i></i><i></i><i></i><i></i></span><b>Slant · 4</b></button>
+            <button data-layout="seven" type="button" aria-label="Mosaic layout, seven panels"><span class="layout-icon seven-icon"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><b>Mosaic · 7</b></button>
+            <button data-layout="hero" type="button" aria-label="Hero layout, five panels"><span class="layout-icon hero-icon"><i></i><i></i><i></i><i></i><i></i></span><b>Hero · 5</b></button>
+          </div>
+          <div class="field-label">GRADE</div><div class="grade-chips" id="grades"><button data-grade="sunset" type="button" class="selected">Vice Sunset</button><button data-grade="night" type="button">Neon Night</button><button data-grade="golden" type="button">Golden Hour</button><button data-grade="mono" type="button">Chrome Mono</button></div>
+          <label class="range-label" for="grade-strength">Strength <span id="grade-strength-value">85%</span></label><input id="grade-strength" type="range" min="0" max="100" value="85">
+          <div class="field-label">POSTER INK</div><div class="toggle-line"><label><input id="ink-toggle" type="checkbox" checked> Halftone</label><label><input id="grain-toggle" type="checkbox" checked> Grain</label><label><input id="vignette-toggle" type="checkbox" checked> Vignette</label></div>
+          <label class="range-label" for="ink-strength">Dot strength <span id="ink-strength-value">16%</span></label><input id="ink-strength" aria-label="Poster Ink strength" type="range" min="0" max="48" value="16">
+          <div class="field-label">CAPTION STYLE</div><div class="style-chips" id="caption-styles"><button data-style="gloss" type="button" class="selected">Sunset Gloss</button><button data-style="chrome" type="button">Dusk Chrome</button><button data-style="tube" type="button">Neon Tube</button><button data-style="band" type="button">Skyline Block</button></div>
+          <label class="toggle-line badge-line"><input id="badge-toggle" type="checkbox" checked> NEW · SUMMER 2026 badge</label>
         </section>
       </div>
       <div class="export-bar"><div class="export-copy"><span class="eyebrow">READY FOR YOUR FEED</span><strong>Pick a size. Get a PNG.</strong></div><div class="size-buttons" id="sizes"><button data-size="square"><span>1 : 1</span><small>SQUARE</small></button><button class="selected" data-size="portrait"><span>4 : 5</span><small>PORTRAIT</small></button><button data-size="story"><span>9 : 16</span><small>STORY</small></button><button data-size="landscape"><span>16 : 9</span><small>LANDSCAPE</small></button></div><button id="export" class="export-button">EXPORT COVER <span>↗</span></button></div>
