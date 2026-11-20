@@ -6,22 +6,28 @@ const knobs = { zoom: document.querySelector('#zoom'), x: document.querySelector
 const sizes = { square: [1080, 1080], portrait: [1080, 1350], story: [1080, 1920], landscape: [1920, 1080] };
 const gradePresets = {
   sunset: { name: 'Vice Sunset', filter: 'saturate(1.35) contrast(1.18)', colors: ['#a63bdb', '#f45c92', '#492192'], opacity: .43 },
-  night: { name: 'Neon Night', filter: 'saturate(.8) contrast(1.28) brightness(.48)', colors: ['#081a6b', '#174ba8', '#070e3b'], opacity: .64 },
+  night: { name: 'Neon Night', filter: 'saturate(.82) contrast(1.19) brightness(.65)', colors: ['#183984', '#327eb5', '#1b174d'], opacity: .64 },
   golden: { name: 'Golden Hour', filter: 'saturate(1.32) contrast(1.08) brightness(1.015)', colors: ['#ffae68', '#ee4994', '#34d6de'], opacity: .27 },
   mono: { name: 'Chrome Mono', filter: 'grayscale(1) contrast(1.35)', colors: ['#accbd8', '#596c85', '#172437'], opacity: .24 },
+  teal: { name: 'Tropic Teal', filter: 'saturate(1.21) contrast(1.12)', colors: ['#ffd089', '#32cfb7', '#075e72'], opacity: .46 },
+  heat: { name: 'Heatwave', filter: 'sepia(.24) saturate(1.55) contrast(1.15)', colors: ['#ffe08f', '#f87838', '#912955'], opacity: .42 },
 };
-const layoutPresets = { mosaic: 'Mosaic · 6', strip: 'Slant · 4', seven: 'Mosaic · 7', hero: 'Hero · 5' };
+const layoutPresets = { mosaic: 'Mosaic · 6', strip: 'Slant · 4', seven: 'Mosaic · 7', hero: 'Hero · 5', grid: 'Grid · 6' };
 const captionStyles = { gloss: 'Afterglow Gloss', chrome: 'Liquid Chrome', tube: 'Electric Script', band: 'Skyline Block' };
-const treatment = { grade: 'sunset', strength: .85, layout: 'mosaic', style: 'gloss', ink: .16, grain: true, vignette: true, badge: true };
+const captionFields = ['caption', 'subcaption', 'kicker', 'tagline'];
+const finishToggles = { 'grain-toggle': 'grain', 'vignette-toggle': 'vignette', 'badge-toggle': 'badge', 'furniture-toggle': 'furniture' };
+const treatment = { grade: 'sunset', strength: .85, layout: 'mosaic', style: 'gloss', ink: .16, grain: true, vignette: true, badge: true, furniture: true };
 const initialPhotos = [
-  { name: 'Sunset Boulevard', src: '/samples/boulevard.jpg' },
-  { name: 'Blue Hour Pier', src: '/samples/pier.jpg' },
+  { name: 'Sunset Boulevard', src: '/samples/boulevard.jpg', tag: 'THE DRIVER', line: 'OCEAN DRIVE · 7:42 PM · LAST RIDE' },
+  { name: 'Blue Hour Pier', src: '/samples/pier.jpg', tag: 'THE ANGLER', line: 'SOUTH PIER · 8:11 PM · TIDE TURNING' },
 ];
 let photos = [];
 let frames = [];
 let activeFrame = 0;
 let outputSize = 'portrait';
 let dragPoint = null;
+const history = [];
+let historyIndex = -1;
 
 function loadPhoto(record) {
   return new Promise((resolve, reject) => {
@@ -34,6 +40,17 @@ function loadPhoto(record) {
 
 function coverFrames(width, height) {
   const landscape = width / height > 1.25;
+  if (treatment.layout === 'grid') {
+    const columns = landscape ? 3 : 2;
+    const rows = 6 / columns;
+    return Array.from({ length: 6 }, (_, i) => {
+      const left = (i % columns) / columns + .006;
+      const top = Math.floor(i / columns) / rows + .006;
+      const right = left + 1 / columns - .012;
+      const bottom = top + 1 / rows - .012;
+      return [[left,top],[right,top],[right,bottom],[left,bottom]];
+    });
+  }
   if (treatment.layout === 'hero') return [
     [[0,0],[.62,0],[.59,.68],[0,.68]], [[.64,0],[1,0],[1,.32],[.62,.32]],
     [[.63,.34],[1,.34],[1,.68],[.60,.68]], [[0,.70],[.48,.70],[.45,1],[0,1]],
@@ -81,12 +98,31 @@ function pathFor(points, width, height) {
   ink.closePath();
 }
 
+function newFrame(points, index) {
+  return { points, photo: index % photos.length, zoom: 1, x: 50, y: 0 };
+}
+
+function suggestedTag(frame) {
+  const photo = photos[frame.photo];
+  return photo?.tag || photo?.name.toUpperCase() || '';
+}
+
+function assignPhoto(frame, photo) {
+  frame.photo = photo;
+  frame.zoom = 1;
+  frame.x = 50;
+  frame.y = 0;
+  frame.flip = false;
+  delete frame.tag;
+  delete frame.line;
+}
+
 function paintPhoto(frame, width, height) {
-  const photo = photos[frame.photo % photos.length];
+  const photo = photos[frame.photo];
   if (!photo) return;
   const { image } = photo;
   const box = bounds(frame.points, width, height);
-  const fit = Math.max(box.w / image.naturalWidth, box.h / image.naturalHeight) * frame.zoom;
+  const fit = Math.max(box.w / image.naturalWidth, box.h / image.naturalHeight) * Math.max(1, frame.zoom);
   const drawWidth = image.naturalWidth * fit;
   const drawHeight = image.naturalHeight * fit;
   const left = box.x + (box.w - drawWidth) * frame.x / 100;
@@ -94,7 +130,15 @@ function paintPhoto(frame, width, height) {
   pathFor(frame.points, width, height);
   ink.save();
   ink.clip();
-  applyColourGrade(frame, box, () => ink.drawImage(image, left, top, drawWidth, drawHeight));
+  applyColourGrade(frame, box, () => {
+    ink.save();
+    if (frame.flip) {
+      ink.translate(box.x * 2 + box.w, 0);
+      ink.scale(-1, 1);
+    }
+    ink.drawImage(image, left, top, drawWidth, drawHeight);
+    ink.restore();
+  });
   ink.restore();
 }
 
@@ -171,13 +215,87 @@ function outlineType(text, x, y, size, maxWidth, color, weight = 950) {
   ink.restore();
 }
 
+function drawNameTag(frame, width, height) {
+  const tag = frame.tag ?? suggestedTag(frame);
+  if (frame.hideTag || !tag) return;
+  const line = frame.line ?? photos[frame.photo]?.line;
+  const box = bounds(frame.points, width, height);
+  const unit = Math.min(width, height);
+  const x = Math.min(...frame.points.slice(0, 2).map(([left]) => left * width)) + unit * .046;
+  const lowerPanel = box.y > height * .6;
+  const topDetail = box.y < height * .02 && (width / height < .85 || box.w < width * .4);
+  const y = lowerPanel ? height * .855 : topDetail ? box.y + box.h - unit * .068 : box.y + unit * (box.y < height * .02 ? .053 : .023);
+  const max = box.w - unit * .09;
+  if (max <= 0) return;
+  ink.save();
+  const size = unit * (lowerPanel ? .014 : .018);
+  ink.font = `900 ${size}px Arial`;
+  const tagWidth = ink.measureText(tag.toUpperCase()).width;
+  ink.font = `700 ${size * .66}px monospace`;
+  const plate = Math.min(max, Math.max(tagWidth, ink.measureText(line || '').width));
+  ink.fillStyle = '#190d25ee';
+  ink.fillRect(x, y, plate + size, size * (line && !lowerPanel ? 2.45 : 1.6));
+  ink.fillStyle = '#ffbe77';
+  ink.fillRect(x, y, size * .15, size * (line && !lowerPanel ? 2.45 : 1.6));
+  ink.font = `900 ${size}px Arial`;
+  ink.fillText(tag.toUpperCase(), x + size * .53, y + size * 1.14, plate);
+  if (line && !lowerPanel) {
+    ink.font = `700 ${size * .66}px monospace`;
+    ink.fillStyle = '#fff4e9';
+    ink.fillText(line.toUpperCase(), x + size * .53, y + size * 2.01, plate);
+  }
+  ink.restore();
+}
+
+function drawFurniture(width, height) {
+  const unit = Math.min(width, height);
+  const left = width * .052;
+  const right = width - left;
+  const rail = height * .887;
+  const ticket = unit * .27;
+  const pitch = unit * .016;
+  const tagline = document.querySelector('#tagline').value.trim().toUpperCase();
+  ink.save();
+  ink.fillStyle = '#160f25';
+  ink.fillRect(left, rail, right - left, height * .078);
+  ink.fillStyle = '#ffbd79';
+  ink.fillRect(left, rail, right - left, unit * .002);
+  ink.font = `900 ${pitch}px Arial`;
+  ink.fillText(tagline, left + pitch * .7, rail + height * .03, right - left - ticket - pitch * 2);
+  ink.font = `700 ${pitch * .77}px monospace`;
+  ink.fillStyle = '#fff0dc';
+  ink.fillText('A SUNSET PICTURES PRODUCTION · STARRING YOU · SHOT ON YOUR OWN CAMERA · GRADED BY HAND',
+    left + pitch * .7, rail + height * .06, right - left - ticket - pitch * 2);
+  ink.fillStyle = '#ffba76';
+  ink.fillRect(right - ticket, rail, ticket, height * .078);
+  ink.fillStyle = '#21132b';
+  ink.font = `900 ${pitch * .97}px Arial`;
+  ink.fillText('NOW SHOWING', right - ticket + pitch * .6, rail + height * .029);
+  ink.font = `700 ${pitch * .7}px monospace`;
+  ink.fillText('VOL. 1 / SEASON ONE', right - ticket + pitch * .6, rail + height * .049, ticket * .57);
+  ink.fillText('VICE CITY · 8:11 PM', right - ticket + pitch * .6, rail + height * .065, ticket * .57);
+  for (let i = 0; i < 21; i++) {
+    const bar = unit * .0021;
+    ink.fillRect(right - pitch - (21 - i) * bar * 1.9, rail + height * .022, bar * (i % 3 ? 1 : .55), height * .041);
+  }
+  const quoteY = height * .009;
+  const quote = '★★★★★  “THE COAST COMES ALIVE”  /  THE AFTERLIGHT REVIEW';
+  ink.font = `900 ${pitch * .84}px Arial`;
+  const quoteWidth = Math.min(ink.measureText(quote).width, width * .66);
+  ink.fillStyle = '#160f25';
+  ink.fillRect(right - quoteWidth - pitch, quoteY, quoteWidth + pitch, pitch * 1.45);
+  ink.fillStyle = '#ffe5a8';
+  ink.fillText(quote, right - quoteWidth - pitch * .5, quoteY + pitch, quoteWidth);
+  ink.restore();
+}
+
 function titleTreatment(width, height) {
   const compact = width / height < .85;
   const base = Math.min(width * (compact ? .12 : .108), height * .19);
   const title = (captionInput.value.trim() || 'YOUR STORY').toUpperCase();
   let first = title;
   const second = document.querySelector('#subcaption').value.trim();
-  const y = height * (compact ? .78 : .74);
+  const y = height * (compact ? .78 : .72);
   ink.save();
   const shadow = ink.createLinearGradient(0, y - base * 1.65, 0, height);
   shadow.addColorStop(0, 'rgba(9,8,21,0)');
@@ -218,7 +336,9 @@ function titleTreatment(width, height) {
   ink.letterSpacing = `${labelSize * .26}px`;
   ink.fillStyle = '#ff75ac';
   ink.letterSpacing = `${labelSize * .10}px`;
-  ink.fillText(document.querySelector('#tagline').value.toUpperCase(), width * .053, Math.min(height * .945, y + base * 1.12), width * .88);
+  if (!treatment.furniture) {
+    ink.fillText(document.querySelector('#tagline').value.toUpperCase(), width * .053, Math.min(height * .945, y + base * 1.12), width * .88);
+  }
   ink.restore();
 }
 
@@ -235,7 +355,7 @@ function drawCover() {
   ink.fillRect(0, 0, width, height);
   const points = coverFrames(width, height);
   activeFrame = Math.min(activeFrame, points.length - 1);
-  frames = points.map((shape, index) => frames[index] || (index % 2 ? { points: shape, photo: index % photos.length, zoom: .68, x: 5, y: 2 } : { points: shape, photo: index % photos.length, zoom: 1 + (index % 3) * .13, x: 26 + (index * 23) % 52, y: 15 + (index * 31) % 70 }));
+  frames = points.map((shape, index) => photos[frames[index]?.photo] ? frames[index] : newFrame(shape, index));
   frames.forEach((frame, index) => { frame.points = points[index]; paintPhoto(frame, width, height); });
   posterInk(width, height);
   const edge = Math.min(width, height) * .009;
@@ -252,16 +372,18 @@ function drawCover() {
   ink.strokeRect(titlePad * 1.35, titlePad * 1.35, width - titlePad * 2.7, height - titlePad * 2.7);
   titleTreatment(width, height);
   drawStarburst(width, height);
+  frames.forEach((frame) => drawNameTag(frame, width, height));
+  if (treatment.furniture) drawFurniture(width, height);
   const stamp = Math.min(width, height) * .012;
   ink.font = `900 ${stamp}px Arial, sans-serif`;
   ink.letterSpacing = `${stamp * .19}px`;
   ink.fillStyle = '#fff4e4';
   ink.shadowColor = '#100a1a';
   ink.shadowBlur = stamp * 1.5;
-  ink.fillText('VICE CITY    •    26', width * .055, height * .055);
+  ink.fillText('VICE CITY    •    26', width * .055, height * .021);
   ink.textAlign = 'right';
   ink.fillStyle = '#ffe5da';
-  ink.fillText('AFTERGLOW  /  NO. 06', width * .945, height * .055);
+  if (!treatment.furniture) ink.fillText('AFTERGLOW  /  NO. 06', width * .945, height * .021);
   ink.textAlign = 'left';
   ink.shadowBlur = 0;
   if (document.body.classList.contains('editing')) {
@@ -271,20 +393,21 @@ function drawCover() {
     ink.strokeStyle = '#76f4e2';
     ink.stroke();
     ink.setLineDash([]);
-    ink.fillStyle = '#76f4e2';
-    const box = bounds(frames[activeFrame].points, width, height);
-    ink.fillRect(box.x + 12, box.y + 12, Math.min(width * .11, 100), height * .026);
   }
 }
 
 function showFrameControls() {
   const frame = frames[activeFrame];
   if (!frame) return;
-  document.querySelector('#active-name').textContent = `FRAME ${String(activeFrame + 1).padStart(2, '0')} · ${photos[frame.photo]?.name || 'PHOTO'}`.toUpperCase();
+  document.querySelector('#active-name').textContent = (photos[frame.photo]?.name || 'PHOTO').toUpperCase();
   knobs.zoom.value = frame.zoom;
   knobs.x.value = frame.x;
   knobs.y.value = frame.y;
   document.querySelector('#panel-grade').value = frame.grade || 'global';
+  document.querySelector('#name-tag').checked = !frame.hideTag;
+  document.querySelector('#tag-name').value = frame.tag ?? suggestedTag(frame);
+  document.querySelector('#tag-line').value = frame.line ?? photos[frame.photo]?.line ?? '';
+  document.querySelector('#flip-panel').setAttribute('aria-pressed', String(!!frame.flip));
   document.querySelector('#grade-strength-value').textContent = `${Math.round(treatment.strength * 100)}%`;
   document.querySelector('#ink-strength-value').textContent = `${Math.round(treatment.ink * 100)}%`;
   document.querySelector('#panel-grade option[value="global"]').textContent = `Global · ${gradePresets[treatment.grade].name}`;
@@ -304,7 +427,7 @@ function setFormat(format) {
   canvas.width = width;
   canvas.height = height;
   const frame = document.querySelector('.stage');
-  const scale = document.body.classList.contains('poster-view') ? Math.min(innerWidth / width, innerHeight / height) : Math.min(frame.parentElement.clientWidth / width, 540 / height);
+  const scale = document.body.classList.contains('poster-view') ? Math.min(innerWidth / width, innerHeight / height) : Math.min(frame.parentElement.clientWidth / width, 440 / height);
   frame.style.width = `${width * scale}px`;
   frame.style.height = `${height * scale}px`;
   frame.style.aspectRatio = `${width} / ${height}`;
@@ -328,7 +451,7 @@ function rebuildLibrary() {
     marker.textContent = photo.name.toUpperCase().slice(0, 12);
     tile.append(preview, marker);
     tile.addEventListener('click', () => {
-      frames[activeFrame].photo = index;
+      assignPhoto(frames[activeFrame], index);
       showFrameControls();
     });
     photoLibrary.append(tile);
@@ -339,28 +462,35 @@ function rebuildLibrary() {
 function fillAllPanels() {
   if (!photos.length || !frames.length) return;
   const photoIndex = frames[activeFrame].photo;
-  frames.forEach((frame) => { frame.photo = photoIndex; });
+  frames.forEach((frame) => assignPhoto(frame, photoIndex));
   rebuildLibrary();
-  drawCover();
+  showFrameControls();
 }
 
 function autoFillPanels() {
   if (!photos.length || !frames.length) return;
-  frames.forEach((frame, index) => { frame.photo = index % photos.length; });
+  frames.forEach((frame, index) => assignPhoto(frame, index % photos.length));
   rebuildLibrary();
-  drawCover();
+  showFrameControls();
 }
 
 function shufflePanels() {
   if (!photos.length || !frames.length) return;
-  frames.forEach((frame) => { frame.photo = Math.floor(Math.random() * photos.length); });
+  const order = photos.map((_, index) => index);
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  frames.forEach((frame, index) => assignPhoto(frame, order[index % order.length]));
   rebuildLibrary();
-  drawCover();
+  showFrameControls();
 }
 
 function exportCover() {
   const [width, height] = sizes[outputSize];
   const previous = [canvas.width, canvas.height];
+  const wasEditing = document.body.classList.contains('editing');
+  document.body.classList.remove('editing');
   canvas.width = width;
   canvas.height = height;
   drawCover();
@@ -371,10 +501,10 @@ function exportCover() {
     link.href = URL.createObjectURL(blob);
     link.click();
     setTimeout(() => URL.revokeObjectURL(link.href), 1200);
-    canvas.width = previous[0];
-    canvas.height = previous[1];
-    drawCover();
   }, 'image/png');
+  document.body.classList.toggle('editing', wasEditing);
+  [canvas.width, canvas.height] = previous;
+  drawCover();
 }
 
 function closestFrame(event) {
@@ -394,17 +524,88 @@ function closestFrame(event) {
 
 function setCropValue(name) {
   const frame = frames[activeFrame];
+  if (!frame) return;
   frame[name] = Number(knobs[name].value);
   showFrameControls();
+}
+
+function syncFinishControls() {
+  for (const key of ['grade', 'layout', 'style']) {
+    document.querySelectorAll(`[data-${key}]`).forEach((chip) => chip.classList.toggle('selected', chip.dataset[key] === treatment[key]));
+  }
+  document.querySelector('#grade-strength').value = treatment.strength * 100;
+  document.querySelector('#ink-strength').value = treatment.ink * 100;
+  document.querySelector('#ink-toggle').checked = treatment.ink > 0;
+  for (const [id, key] of Object.entries(finishToggles)) document.getElementById(id).checked = treatment[key];
+  document.querySelector('#char-count').textContent = `${captionInput.value.length} / 28`;
+}
+
+function syncHistoryButtons() {
+  document.querySelector('#undo').disabled = historyIndex < 1;
+  document.querySelector('#redo').disabled = historyIndex >= history.length - 1;
+}
+
+function recordEdit() {
+  const state = JSON.stringify({
+    treatment, frames: frames.map(({ points, ...frame }) => frame), activeFrame, outputSize,
+    captions: captionFields.map((id) => document.getElementById(id).value),
+  });
+  const previous = history[historyIndex];
+  if (previous) {
+    const old = JSON.parse(previous);
+    old.activeFrame = activeFrame;
+    if (JSON.stringify(old) === state) return;
+  }
+  history.splice(++historyIndex, history.length, state);
+  if (history.length > 60) {
+    history.shift();
+    historyIndex--;
+  }
+  syncHistoryButtons();
+}
+
+function restoreEdit(offset) {
+  const next = historyIndex + offset;
+  if (!history[next]) return;
+  historyIndex = next;
+  const state = JSON.parse(history[next]);
+  Object.assign(treatment, state.treatment);
+  frames = state.frames;
+  activeFrame = state.activeFrame;
+  captionFields.forEach((id, index) => { document.getElementById(id).value = state.captions[index]; });
+  syncFinishControls();
+  setFormat(state.outputSize);
+  syncHistoryButtons();
+}
+
+function setSceneCrops(scene, width, height) {
+  const scenes = {
+    lead: [[0,1,55,0], [1,1,48,0], [0,1.8,0,100], [0,1,52,14], [1,2,100,100], [0,2,0,100]],
+    story: [[1,1,31,0], [0,1.14,63,0], [0,2,0,100], [1,2,100,100], [1,1.7,100,80], [0,1.7,0,100]],
+    midnight: [[1,1,42,0], [0,1,58,0], [1,2,100,100], [0,2,0,100], [0,2,0,100], [1,2,100,100], [0,2,0,100]],
+  };
+  if (!scenes[scene] || photos.length < 2) return;
+  frames = coverFrames(width, height).map((points, index) => {
+    const crop = scenes[scene][index];
+    if (!crop) return newFrame(points, index);
+    const [photo, zoom, x, y] = crop;
+    const frame = { points, photo, zoom, x, y };
+    const detail = (scene === 'lead' && [2,4,5].includes(index)) || (scene === 'story' && index >= 2) || (scene === 'midnight' && index >= 2);
+    if (detail) {
+      frame.tag = photo === 0 ? 'THE GETAWAY' : 'THE CATCH';
+      frame.line = photo === 0 ? 'COAST ROAD · ENGINE STILL WARM' : 'SOUTH PIER · NO LOOSE ENDS';
+    }
+    return frame;
+  });
 }
 
 async function start() {
   const params = new URLSearchParams(location.search);
   const poster = params.has('poster');
   if (poster) document.body.classList.add('poster-view');
-  treatment.grade = params.get('grade') || treatment.grade;
-  treatment.layout = params.get('layout') || treatment.layout;
-  treatment.style = params.get('style') || treatment.style;
+  if (Object.hasOwn(gradePresets, params.get('grade'))) treatment.grade = params.get('grade');
+  if (Object.hasOwn(layoutPresets, params.get('layout'))) treatment.layout = params.get('layout');
+  if (Object.hasOwn(captionStyles, params.get('style'))) treatment.style = params.get('style');
   treatment.ink = params.has('ink') ? Number(params.get('ink')) : treatment.ink;
   treatment.strength = params.has('strength') ? Number(params.get('strength')) : treatment.strength;
   treatment.badge = params.get('badge') !== 'off';
@@ -414,40 +615,23 @@ async function start() {
   if (params.has('caption')) captionInput.value = params.get('caption').slice(0, 28);
   document.querySelector('#subcaption').value = params.get('sub') || 'Vice City';
   document.querySelector('#kicker').value = params.get('kicker') || 'Welcome to';
-  document.querySelector('#tagline').value = params.get('tagline') || 'A Vice City story  /  Sunset Division';
-  document.querySelectorAll('[data-grade]').forEach((chip) => chip.classList.toggle('selected', chip.dataset.grade === treatment.grade));
-  document.querySelectorAll('[data-layout]').forEach((chip) => chip.classList.toggle('selected', chip.dataset.layout === treatment.layout));
-  document.querySelectorAll('[data-style]').forEach((chip) => chip.classList.toggle('selected', chip.dataset.style === treatment.style));
-  document.querySelector('#grade-strength').value = treatment.strength * 100;
-  document.querySelector('#ink-strength').value = treatment.ink * 100;
-  document.querySelector('#ink-toggle').checked = treatment.ink > 0;
-  document.querySelector('#grain-toggle').checked = treatment.grain;
-  document.querySelector('#vignette-toggle').checked = treatment.vignette;
-  document.querySelector('#badge-toggle').checked = treatment.badge;
-  try { photos = await Promise.all(initialPhotos.map(loadPhoto)); } catch { photos = []; }
-  if (poster && params.get('photo') === 'pier' && photos.length > 1) {
-    frames = coverFrames(1280, 720).map((points, index) => ({ points, photo: index % 2 ? 0 : 1, zoom: .60, x: 5, y: 2, grade: index === Number(params.get('panelGradeIndex')) ? params.get('panelGrade') : undefined }));
-  }
-  const selected = params.get('size');
-  if (selected && sizes[selected]) setFormat(selected); else setFormat('landscape');
+  document.querySelector('#tagline').value = params.get('tagline') || 'TWO STRANGERS · ONE COAST · LAST LIGHT';
+  syncFinishControls();
+  const loaded = await Promise.allSettled(initialPhotos.map(loadPhoto));
+  photos = loaded.flatMap((result) => result.status === 'fulfilled' ? [result.value] : []);
+  const selected = Object.hasOwn(sizes, params.get('size')) ? params.get('size') : 'landscape';
+  setSceneCrops(params.get('scene') || (selected === 'landscape' && treatment.layout === 'mosaic' ? 'lead' : ''), ...sizes[selected]);
+  setFormat(selected);
   if (params.has('panelGradeIndex')) {
     const index = Number(params.get('panelGradeIndex'));
-    if (frames[index]) { frames[index].grade = params.get('panelGrade') || treatment.grade; drawCover(); }
+    if (frames[index] && Object.hasOwn(gradePresets, params.get('panelGrade'))) frames[index].grade = params.get('panelGrade');
   }
   rebuildLibrary();
-  if (params.has('panel') && Number.isInteger(Number(params.get('panel')))) activeFrame = Number(params.get('panel')) % frames.length;
+  const panel = Number(params.get('panel'));
+  if (Number.isInteger(panel) && frames[panel]) activeFrame = panel;
   showFrameControls();
-  if (poster) {
-    const [width, height] = sizes[selected] || sizes.landscape;
-    canvas.width = width;
-    canvas.height = height;
-    const scale = Math.min(innerWidth / width, innerHeight / height);
-    const stage = document.querySelector('.stage');
-    stage.style.width = `${width * scale}px`;
-    stage.style.height = `${height * scale}px`;
-    stage.style.aspectRatio = `${width} / ${height}`;
-    drawCover();
-  }
+  if (poster) return;
+  recordEdit();
   captionInput.addEventListener('input', () => {
     document.querySelector('#char-count').textContent = `${captionInput.value.length} / 28`;
     drawCover();
@@ -481,7 +665,50 @@ async function start() {
     drawCover();
   });
   document.querySelector('#ink-toggle').addEventListener('change', (event) => { treatment.ink = event.target.checked ? Number(document.querySelector('#ink-strength').value) / 100 : 0; drawCover(); });
-  [['grain-toggle','grain'],['vignette-toggle','vignette'],['badge-toggle','badge']].forEach(([id, key]) => document.querySelector(`#${id}`).addEventListener('change', (event) => { treatment[key] = event.target.checked; drawCover(); }));
+  Object.entries(finishToggles).forEach(([id, key]) => document.getElementById(id).addEventListener('change', (event) => { treatment[key] = event.target.checked; drawCover(); }));
+  document.querySelector('#name-tag').addEventListener('change', (event) => {
+    frames[activeFrame].hideTag = !event.target.checked;
+    drawCover();
+  });
+  for (const [id, key] of [['tag-name', 'tag'], ['tag-line', 'line']]) {
+    document.getElementById(id).addEventListener('input', (event) => {
+      frames[activeFrame][key] = event.target.value;
+      drawCover();
+    });
+  }
+  document.querySelector('#flip-panel').addEventListener('click', () => {
+    const frame = frames[activeFrame];
+    frame.flip = !frame.flip;
+    showFrameControls();
+  });
+  document.querySelector('#swap-panel').addEventListener('click', () => {
+    const next = (activeFrame + 1) % frames.length;
+    [frames[activeFrame], frames[next]] = [frames[next], frames[activeFrame]];
+    activeFrame = next;
+    showFrameControls();
+  });
+  document.querySelector('#surprise').addEventListener('click', () => {
+    const pickOther = (options, current) => {
+      const choices = Object.keys(options).filter((key) => key !== current);
+      return choices[Math.floor(Math.random() * choices.length)];
+    };
+    treatment.layout = pickOther(layoutPresets, treatment.layout);
+    treatment.grade = pickOther(gradePresets, treatment.grade);
+    activeFrame = 0;
+    frames = [];
+    syncFinishControls();
+    drawCover();
+    shufflePanels();
+  });
+  document.querySelector('#undo').addEventListener('click', () => restoreEdit(-1));
+  document.querySelector('#redo').addEventListener('click', () => restoreEdit(1));
+  document.querySelector('.controls').addEventListener('click', (event) => {
+    const button = event.target.closest('button');
+    if (button && !['undo', 'redo', 'export'].includes(button.id)) recordEdit();
+  });
+  document.querySelector('.controls').addEventListener('change', (event) => {
+    if (event.target.id !== 'upload') recordEdit();
+  });
   document.querySelector('#panel-grade').addEventListener('change', (event) => { frames[activeFrame].grade = event.target.value === 'global' ? undefined : event.target.value; drawCover(); });
   document.querySelector('#fill-all').addEventListener('click', fillAllPanels);
   document.querySelector('#auto-fill').addEventListener('click', autoFillPanels);
@@ -489,12 +716,21 @@ async function start() {
   document.querySelector('#upload').addEventListener('change', async (event) => {
     for (const file of event.target.files) {
       if (!file.type.startsWith('image/')) continue;
-      const photo = await loadPhoto({ name: file.name.replace(/\.[^.]+$/, '').slice(0, 18), src: URL.createObjectURL(file) });
+      const src = URL.createObjectURL(file);
+      let photo;
+      try {
+        photo = await loadPhoto({ name: file.name.replace(/\.[^.]+$/, '').slice(0, 18), src });
+      } catch {
+        URL.revokeObjectURL(src);
+        continue;
+      }
       photos.push(photo);
-      if (frames[activeFrame]) frames[activeFrame].photo = photos.length - 1;
+      if (frames[activeFrame]) assignPhoto(frames[activeFrame], photos.length - 1);
     }
     rebuildLibrary();
+    drawCover();
     showFrameControls();
+    recordEdit();
   });
   document.querySelector('#sizes').addEventListener('click', (event) => {
     const button = event.target.closest('[data-size]');
@@ -519,7 +755,12 @@ async function start() {
     dragPoint = { x: event.clientX, y: event.clientY };
     showFrameControls();
   });
-  canvas.addEventListener('pointerup', () => { dragPoint = null; });
+  const endDrag = () => {
+    dragPoint = null;
+    recordEdit();
+  };
+  canvas.addEventListener('pointerup', endDrag);
+  canvas.addEventListener('pointercancel', endDrag);
 }
 
 start();
