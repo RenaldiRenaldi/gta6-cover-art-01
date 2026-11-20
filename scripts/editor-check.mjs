@@ -20,7 +20,7 @@ try {
     await page.selectOption('#panel-grade', grade);
     assert.equal(await page.locator('#panel-grade').inputValue(), grade);
   }
-  for (const layout of ['mosaic', 'strip', 'seven', 'hero', 'grid']) {
+  for (const layout of ['mosaic', 'slant', 'seven', 'hero', 'solo', 'grid']) {
     await page.click('[data-layout="' + layout + '"]');
     const source = await art();
     await page.click('#name-tag');
@@ -50,6 +50,7 @@ try {
   assert.notEqual(await page.locator('[data-grade].selected').getAttribute('data-grade'), previousGrade);
   for (const [format, w, h] of [['square',1080,1080], ['portrait',1080,1350], ['story',1080,1920], ['landscape',1920,1080]]) {
     await page.click('[data-size="' + format + '"]');
+    assert.deepEqual(await page.locator('#art').evaluate(({ width, height }) => [width, height]), [w, h]);
     const downloadEvent = page.waitForEvent('download');
     await page.click('#export');
     const download = await downloadEvent;
@@ -61,8 +62,17 @@ try {
     assert.equal(png.readUInt32BE(16), w);
     assert.equal(png.readUInt32BE(20), h);
   }
+  const batch = [];
+  page.on('download', (download) => batch.push(download.suggestedFilename()));
+  await page.click('#export-all');
+  await expectBatch();
+  async function expectBatch() {
+    await page.waitForFunction(() => !document.querySelector('#export-all').disabled);
+    assert.deepEqual(batch.map((name) => name.match(/\d+x\d+(?=\.png)/)?.[0]),
+      ['1080x1080', '1080x1350', '1920x1080']);
+  }
   assert.deepEqual(errors, []);
-  console.log('Editor: history, six grades, five layouts, tags, flip, swap, furniture, surprise and four PNG exports PASS');
+  console.log('Editor: history, six grades and layouts, tags, flip, swap, furniture, surprise and four PNG sizes PASS');
 } finally {
   await browser.close();
 }

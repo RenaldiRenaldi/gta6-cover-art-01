@@ -4,14 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#110c20">
-  <title>Vice City Afterglow — cover lab</title>
+  <title>Rainline Cover Lab — Last Light</title>
   <link rel="stylesheet" href="/style.css">
   <style>
     .flow{display:flex;gap:10px;align-items:center;margin:5px 0 11px;color:#fff1df;font-size:11px;font-weight:900;letter-spacing:.4px}.flow span{padding:6px 10px;border:1px solid #563e5e;border-radius:16px;background:#21172d}.flow span:first-child{border-color:#ff65a8;color:#ffb3d0}.flow i{color:#ff6da9;font-size:17px;font-style:normal}
     .photo-actions{display:flex;gap:6px;margin-top:8px}.photo-actions button,.grade-chips button,.style-chips button{border:1px solid #55465d;border-radius:3px;background:#21192e;color:#eee1ef;padding:7px 8px;font-size:8px;font-weight:900;letter-spacing:.3px;cursor:pointer}.photo-actions button:hover,.grade-chips button:hover,.style-chips button:hover{border-color:#ff71ad;color:#fff}.field-label{display:block;margin-top:9px;margin-bottom:4px;color:#a99caf;font-size:8px;font-weight:900;letter-spacing:1.2px;text-transform:uppercase}.text-field,.grade-select{width:100%;height:27px;border:1px solid #51405c;border-radius:3px;background:#100c1d;color:#fff0e8;padding:0 8px;font-size:10px}.field-pair{display:grid;grid-template-columns:1fr 1fr;gap:7px}.field-pair label{color:#a99caf;font-size:8px}.field-pair .text-field{margin-top:3px}
     .layout-chips{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.layout-chips button{display:grid;gap:4px;justify-items:center;padding:5px 3px;border:1px solid #4b3e56;border-radius:3px;background:#211a2d;color:#ddd1e2;cursor:pointer}.layout-chips button.selected,.grade-chips button.selected,.style-chips button.selected{border-color:#ff64a7;background:#44203e;color:#fff}.layout-chips b{font-size:7px;white-space:nowrap}.layout-icon{width:42px;height:24px;display:grid;gap:2px;background:#0d0a16;padding:2px}.layout-icon i{display:block;background:#f878a9}.mosaic-icon{grid-template-columns:1.3fr 1fr 1fr;grid-template-rows:1fr 1fr}.mosaic-icon i:first-child{grid-row:span 2;background:#f2b15f}.strip-icon{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}.strip-icon i:first-child{grid-row:span 2}.seven-icon{grid-template-columns:repeat(3,1fr);grid-template-rows:1fr 1fr 1fr}.seven-icon i:first-child{grid-row:span 2}.hero-icon{grid-template-columns:1.5fr 1fr;grid-template-rows:1fr 1fr}.hero-icon i:first-child{grid-row:span 2;background:#ffba73}
     .control-grid{grid-template-columns:.82fr 1fr 1.2fr;align-items:stretch}.grade-chips,.style-chips{display:flex;flex-wrap:wrap;gap:5px}.grade-chips button{flex:1;min-width:70px;padding:6px 4px;font-size:7px}.style-chips button{flex:1;min-width:80px;font-size:7px}.style-card{grid-column:auto}.toggle-line{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0;color:#cfc2d4;font-size:8px;font-weight:800}.toggle-line input{accent-color:#ff64a7}.badge-line{padding:7px 8px;border:1px dashed #66516c;border-radius:3px}.story-card{min-height:250px}.grade-select:focus,.text-field:focus{outline:1px solid #ff71ad}@media(max-width:760px){.control-grid{grid-template-columns:1fr}.style-card{grid-column:auto}.layout-chips{grid-template-columns:repeat(2,1fr)}.flow{font-size:9px;gap:5px}}
-  @media(min-width:761px){#layouts{grid-template-columns:repeat(5,1fr)}}
+  @media(min-width:761px){#layouts{grid-template-columns:repeat(6,1fr)}}
   .grid-icon{grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr)}
   .panel-actions{display:flex;gap:6px;align-items:center;margin-top:6px;font-size:9px}
   .panel-actions label{margin-right:auto;display:flex;align-items:center;gap:4px}
@@ -26,19 +26,34 @@
     .controls{padding-top:12px}
     .intro{margin-bottom:10px}
     .control-card .field-label{margin-top:7px}
+    .layout-chips button{padding:4px 2px}
+    .layout-icon{width:36px;height:21px}
+    .field-pair{gap:5px}
+    .text-field,.grade-select{height:24px;font-size:9px}
   }
+  .solo-icon{grid-template-columns:1fr}.solo-icon i{grid-column:1;grid-row:1;background:#38d4df}
+  .export-strip{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:7px;padding:7px 10px;background:#141120;border:1px solid #393045;border-radius:4px}
+  .strip-label{font-size:8px;font-weight:900;letter-spacing:1.1px;color:#d5c9dc;margin-right:auto}
+  .export-preview{display:grid;justify-items:center;gap:3px;padding:4px;border:1px solid #393045;background:#0b0a14}
+  .export-preview canvas{display:block;object-fit:cover;border:1px solid #86eaf0}
+  .export-preview small{font-size:7px;color:#d8ccd9;white-space:nowrap}
+  .export-all{height:34px;padding:0 11px;border:1px solid #50d9e2;background:#10263a;color:#c5fbff;font-weight:900;font-size:9px;letter-spacing:.7px;cursor:pointer}
+  @media(min-width:761px){.export-preview canvas{width:74px;height:55px}.square-preview canvas{width:55px;height:55px}.portrait-preview canvas{width:47px;height:55px}.landscape-preview canvas{width:98px;height:55px}}
+  @media(max-width:760px){.export-strip{flex-wrap:wrap}.strip-label{width:100%}.control-grid{grid-template-columns:1fr}}
+  @media(min-width:761px){#layouts{grid-template-columns:repeat(3,minmax(0,1fr))!important}.control-grid{grid-template-columns:.78fr 1.28fr 1.35fr;gap:8px}.control-card{padding:7px}.photo-library{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;min-height:0}.photo-library .thumb{width:auto;height:38px}.upload-button{height:27px;margin-top:6px}.hint{margin-top:5px}.photo-actions{gap:3px;margin-top:5px}.photo-actions button{padding:5px 4px;font-size:7px}.caption-input{height:33px;font-size:18px}.story-card .field-label{margin-top:5px}.layout-chips{gap:4px}.layout-chips b{font-size:6px}.grade-chips{gap:3px}.grade-chips button{min-width:64px;padding:5px 3px;font-size:6px}.style-chips{gap:3px}.style-chips button{min-width:65px;padding:5px 3px;font-size:6px}.control-card .card-heading{font-size:8px}.range-label{margin-top:5px;font-size:8px}.toggle-line{gap:5px;margin:4px 0;font-size:7px}.export-bar{gap:7px;margin-top:7px;padding:7px}.export-copy{min-width:96px}.export-copy strong{font-size:9px}.size-buttons{gap:3px}.size-buttons button{height:36px;min-width:48px}.size-buttons button span{font-size:8px}.size-buttons button small{font-size:6px}.export-button{height:36px;padding:0 8px;font-size:8px}.fineprint{margin-top:5px;font-size:7px}.intro .headline{font-size:20px}.intro .subline{font-size:9px}.intro .eyebrow{font-size:7px}.intro{margin-bottom:5px}.flow{margin:0 0 6px;font-size:9px}.workspace{padding-top:10px}.masthead{height:34px}}
+  @media(min-width:761px){.export-preview canvas{width:auto;height:auto;max-width:98px;max-height:54px}.square-preview canvas{width:48px;height:48px}.portrait-preview canvas{width:39px;height:48px}.landscape-preview canvas{width:86px;height:48px}.export-preview small{font-size:6px}.export-all{height:30px;padding:0 7px;font-size:7px}.strip-label{font-size:7px}}
   </style>
 </head>
 <body>
   <main class="workspace">
     <header class="masthead">
-      <a class="brand" href="#" aria-label="Afterglow studio"><span class="brand-mark">✳</span> AFTERGLOW <span class="brand-lab">COVER LAB</span></a>
+      <a class="brand" href="#" aria-label="Rainline studio"><span class="brand-mark">〰</span> RAINLINE <span class="brand-lab">COVER LAB</span></a>
       <div class="offline"><span></span> PRIVATE · OFFLINE</div>
     </header>
     <div class="flow"><span>1 Add photos</span><i>·</i><span>2 Pick layout + grade</span><i>·</i><span>3 Export</span></div>
     <section class="stage" aria-label="Your cover art">
-      <canvas id="art" width="1440" height="900" aria-label="Live cover preview"></canvas>
-      <div class="stage-tag"><span>✦</span> YOUR CITY. YOUR STORY.</div>
+      <canvas id="art" width="1920" height="1080" aria-label="Live cover preview"></canvas>
+      <div class="stage-tag"><span>✦</span> LAST LIGHT · RAINLINE</div>
       <button id="save" class="save-button">↓ <span>DOWNLOAD PNG</span></button>
     </section>
     <section class="controls">
@@ -53,12 +68,16 @@
         </section>
         <section class="control-card story-card">
           <div class="card-heading"><span class="step">02</span><span>YOUR HEADLINE</span><span class="muted">CAPTION STUDIO</span></div>
-          <label class="sr-only" for="caption">Cover title</label><input id="caption" class="caption-input" maxlength="28" value="NEON FELONY" autocomplete="off">
-          <label class="field-label" for="subcaption">Script second line</label><input id="subcaption" class="text-field" maxlength="24" value="Vice City">
-          <div class="field-pair"><label><span>Kicker</span><input id="kicker" class="text-field" maxlength="20" value="Welcome to"></label><label><span>Tagline</span><input id="tagline" class="text-field" maxlength="46" value="A Vice City story / Sunset Division"></label></div>
+          <label class="sr-only" for="caption">Cover title</label><input id="caption" class="caption-input" maxlength="28" value="LAST LIGHT" autocomplete="off">
+          <div class="field-pair"><label><span>Script line</span><input id="subcaption" class="text-field" maxlength="24" value="Rainline"></label><label><span>Kicker</span><input id="kicker" class="text-field" maxlength="28" value="WELCOME TO THE WET SIDE"></label></div>
+          <div class="field-pair"><label><span>Tagline</span><input id="tagline" class="text-field" maxlength="46" value="SEVEN STRANGERS · ONE CITY · NO DRY LAND"></label><label><span>Title font</span><select id="title-font" class="grade-select"><option>Impact</option><option>Arial Black</option><option>Georgia</option></select></label></div>
+          <div class="field-pair"><label><span>Script font</span><select id="script-font" class="grade-select"><option>Brush Script MT</option><option>Segoe Script</option><option>Georgia</option></select></label><label><span>Seal</span><select id="seal" class="grade-select"><option>BEST CAST</option><option>ORIGINAL</option><option>EST. 86</option></select></label></div>
+          <div class="field-pair"><label><span>Review quote</span><input id="review" class="text-field" value="RAIN-SLICKED AND LETHAL"></label><label><span>Source</span><input id="source" class="text-field" value="THE RAINLINE GAZETTE"></label></div>
+          <div class="field-pair"><label><span>Billing</span><input id="billing" class="text-field" value="A RAINLINE PICTURES PRODUCTION · STARRING YOU · SHOT ON YOUR OWN CAMERA · GRADED BY HAND"></label><label><span>Seal ring</span><input id="ring" class="text-field" value="RAINLINE FILM FESTIVAL"></label></div>
+          <div class="field-pair"><label><span>Release line</span><input id="release" class="text-field" value="COMING SOON"></label><label><span>Edition tag</span><input id="edition" class="text-field" value="VOL. 1 / RAIN SEASON"></label></div>
           <div class="caption-foot"><span>YOUR STORY IN LIGHTS</span><span id="char-count">11 / 28</span></div>
           <div class="frame-label"><span>PANEL CROP · <b id="frame-name">FRAME 01 / 6</b></span><span id="active-name">SUNSET BOULEVARD</span></div>
-          <label class="field-label" for="panel-grade">Grade: this panel</label><select id="panel-grade" class="grade-select"><option value="global">Global · Vice Sunset</option><option value="sunset">Vice Sunset</option><option value="night">Neon Night</option><option value="golden">Golden Hour</option><option value="mono">Chrome Mono</option><option value="teal">Tropic Teal</option><option value="heat">Heatwave</option></select>
+          <label class="field-label" for="panel-grade">Grade: this panel</label><select id="panel-grade" class="grade-select"><option value="global">Global · Neon Night</option><option value="sunset">Vice Sunset</option><option value="night">Neon Night</option><option value="golden">Golden Hour</option><option value="mono">Chrome Mono</option><option value="teal">Tropic Teal</option><option value="heat">Heatwave</option></select>
           <label class="range-label" for="zoom">Zoom <span id="zoom-value">1.0×</span></label><input id="zoom" type="range" min="1" max="2.6" step="0.01" value="1">
           <label class="range-label" for="focus-x">Horizontal <span id="x-value">50%</span></label><input id="focus-x" type="range" min="0" max="100" value="50">
           <label class="range-label" for="focus-y">Vertical <span id="y-value">50%</span></label><input id="focus-y" type="range" min="0" max="100" value="50">
@@ -67,25 +86,27 @@
         </section>
         <section class="control-card style-card" aria-label="Layout, colour grade, print effects and caption style">
           <div class="card-heading"><span class="step">03</span><span>LAYOUT + FINISH</span></div>
-          <div class="field-label">LAYOUT</div><div class="layout-chips" id="layouts">
+          <div class="field-label">LAYOUT · ALL FRAMES AUTO-FILL</div><div class="layout-chips" id="layouts">
             <button data-layout="mosaic" type="button" class="selected" aria-label="Mosaic layout, six panels"><span class="layout-icon mosaic-icon"><i></i><i></i><i></i><i></i><i></i><i></i></span><b>Mosaic · 6</b></button>
-            <button data-layout="strip" type="button" aria-label="Slant layout, four panels"><span class="layout-icon strip-icon"><i></i><i></i><i></i><i></i></span><b>Slant · 4</b></button>
-            <button data-layout="seven" type="button" aria-label="Mosaic layout, seven panels"><span class="layout-icon seven-icon"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><b>Mosaic · 7</b></button>
+            <button data-layout="seven" type="button" aria-label="Mosaic layout, seven panels"><span class="layout-icon seven-icon"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><b>Seven · 7</b></button>
             <button data-layout="hero" type="button" aria-label="Hero layout, five panels"><span class="layout-icon hero-icon"><i></i><i></i><i></i><i></i><i></i></span><b>Hero · 5</b></button>
             <button data-layout="grid" type="button" aria-label="Grid layout, six panels"><span class="layout-icon grid-icon"><i></i><i></i><i></i><i></i><i></i><i></i></span><b>Grid · 6</b></button>
+            <button data-layout="slant" type="button" aria-label="Slant Seven layout, seven panels"><span class="layout-icon strip-icon"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><b>Slant Seven · 7</b></button>
+            <button data-layout="solo" type="button" aria-label="Solo Poster layout, one panel"><span class="layout-icon solo-icon"><i></i></span><b>Solo Poster · 1</b></button>
           </div>
-          <div class="field-label">GRADE</div><div class="grade-chips" id="grades"><button data-grade="sunset" type="button" class="selected">Vice Sunset</button><button data-grade="night" type="button">Neon Night</button><button data-grade="golden" type="button">Golden Hour</button><button data-grade="mono" type="button">Chrome Mono</button><button data-grade="teal" type="button">Tropic Teal</button><button data-grade="heat" type="button">Heatwave</button></div>
+          <div class="field-label">GRADE</div><div class="grade-chips" id="grades"><button data-grade="sunset" type="button">Vice Sunset</button><button data-grade="night" type="button" class="selected">Neon Night</button><button data-grade="golden" type="button">Golden Hour</button><button data-grade="mono" type="button">Chrome Mono</button><button data-grade="teal" type="button">Tropic Teal</button><button data-grade="heat" type="button">Heatwave</button></div>
           <label class="range-label" for="grade-strength">Strength <span id="grade-strength-value">85%</span></label><input id="grade-strength" type="range" min="0" max="100" value="85">
-          <div class="field-label">POSTER INK</div><div class="toggle-line"><label><input id="ink-toggle" type="checkbox" checked> Halftone</label><label><input id="grain-toggle" type="checkbox" checked> Grain</label><label><input id="vignette-toggle" type="checkbox" checked> Vignette</label></div>
+          <div class="field-label">POSTER INK</div><div class="toggle-line"><label><input id="ink-toggle" type="checkbox" checked> Halftone</label><label><input id="rain-toggle" type="checkbox" checked> Rain</label><label><input id="grain-toggle" type="checkbox" checked> Grain</label><label><input id="vignette-toggle" type="checkbox" checked> Vignette</label></div>
           <label class="range-label" for="ink-strength">Dot strength <span id="ink-strength-value">16%</span></label><input id="ink-strength" aria-label="Poster Ink strength" type="range" min="0" max="48" value="16">
-          <div class="field-label">CAPTION STYLE</div><div class="style-chips" id="caption-styles"><button data-style="gloss" type="button" class="selected">Sunset Gloss</button><button data-style="chrome" type="button">Dusk Chrome</button><button data-style="tube" type="button">Neon Tube</button><button data-style="band" type="button">Skyline Block</button></div>
-          <label class="toggle-line badge-line"><input id="badge-toggle" type="checkbox" checked> NEW · SUMMER 2026 badge</label>
+          <div class="field-label">CAPTION STYLE</div><div class="style-chips" id="caption-styles"><button data-style="ice" type="button" class="selected">Ice Neon</button><button data-style="gloss" type="button">Sunset Gloss</button><button data-style="chrome" type="button">Liquid Chrome</button><button data-style="tube" type="button">Neon Tube</button><button data-style="band" type="button">Skyline Block</button></div>
+          <label class="toggle-line badge-line"><input id="badge-toggle" type="checkbox" checked> Gold seal · film festival ring</label>
           <label class="toggle-line"><input id="furniture-toggle" type="checkbox" checked> Poster credits, review and ticket</label>
           <div class="photo-actions"><button id="undo" type="button" disabled>Undo</button><button id="redo" type="button" disabled>Redo</button><button id="surprise" type="button">Surprise me</button></div>
         </section>
       </div>
-      <div class="export-bar"><div class="export-copy"><span class="eyebrow">READY FOR YOUR FEED</span><strong>Pick a size. Get a PNG.</strong></div><div class="size-buttons" id="sizes"><button data-size="square"><span>1 : 1</span><small>SQUARE</small></button><button class="selected" data-size="portrait"><span>4 : 5</span><small>PORTRAIT</small></button><button data-size="story"><span>9 : 16</span><small>STORY</small></button><button data-size="landscape"><span>16 : 9</span><small>LANDSCAPE</small></button></div><button id="export" class="export-button">EXPORT COVER <span>↗</span></button></div>
-      <div class="fineprint"><span>DESIGNED IN THE SUNSET STATE <i>✳</i></span><span>NO CLOUD. NO UPLOAD. JUST YOUR COVER.</span></div>
+      <div class="export-bar"><div class="export-copy"><span class="eyebrow">READY FOR YOUR FEED</span><strong>Three crops · live previews</strong></div><div class="size-buttons" id="sizes"><button data-size="square"><span>1:1 · 1080×1080</span><small>SQUARE</small></button><button data-size="portrait"><span>4:5 · 1080×1350</span><small>PORTRAIT</small></button><button data-size="story"><span>9:16 · 1080×1920</span><small>STORY</small></button><button class="selected" data-size="landscape"><span>16:9 · 1920×1080</span><small>LANDSCAPE</small></button></div><button id="export" class="export-button">EXPORT PNG <span>↗</span></button></div>
+      <div class="export-strip"><span class="strip-label">ACTUAL POSTER</span><div class="export-preview square-preview"><canvas id="export-square" width="144" height="144"></canvas><small>1:1 · 1080×1080</small></div><div class="export-preview portrait-preview"><canvas id="export-portrait" width="115" height="144"></canvas><small>4:5 · 1080×1350</small></div><div class="export-preview landscape-preview"><canvas id="export-landscape" width="192" height="108"></canvas><small>16:9 · 1920×1080</small></div><button id="export-all" class="export-all">EXPORT ALL 3 PNGS</button></div>
+      <div class="fineprint"><span>RAINLINE COVER LAB · NIGHT SHIFT <i>✳</i></span><span>PRIVATE · OFFLINE · PHOTOS STAY ON THIS DEVICE</span></div>
     </section>
   </main>
   <script type="module" src="/src/app.js"></script>

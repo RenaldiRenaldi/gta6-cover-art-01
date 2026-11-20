@@ -1,25 +1,30 @@
 const canvas = document.querySelector('#art');
-const ink = canvas.getContext('2d');
+let ink = canvas.getContext('2d');
 const photoLibrary = document.querySelector('#photo-library');
 const captionInput = document.querySelector('#caption');
 const knobs = { zoom: document.querySelector('#zoom'), x: document.querySelector('#focus-x'), y: document.querySelector('#focus-y') };
 const sizes = { square: [1080, 1080], portrait: [1080, 1350], story: [1080, 1920], landscape: [1920, 1080] };
 const gradePresets = {
   sunset: { name: 'Vice Sunset', filter: 'saturate(1.35) contrast(1.18)', colors: ['#a63bdb', '#f45c92', '#492192'], opacity: .43 },
-  night: { name: 'Neon Night', filter: 'saturate(.82) contrast(1.19) brightness(.65)', colors: ['#183984', '#327eb5', '#1b174d'], opacity: .64 },
+  night: { name: 'Neon Night', filter: 'saturate(1.22) contrast(1.12) brightness(1.12)', colors: ['#193867', '#19a4ca', '#322357'], opacity: .52 },
   golden: { name: 'Golden Hour', filter: 'saturate(1.32) contrast(1.08) brightness(1.015)', colors: ['#ffae68', '#ee4994', '#34d6de'], opacity: .27 },
   mono: { name: 'Chrome Mono', filter: 'grayscale(1) contrast(1.35)', colors: ['#accbd8', '#596c85', '#172437'], opacity: .24 },
   teal: { name: 'Tropic Teal', filter: 'saturate(1.21) contrast(1.12)', colors: ['#ffd089', '#32cfb7', '#075e72'], opacity: .46 },
   heat: { name: 'Heatwave', filter: 'sepia(.24) saturate(1.55) contrast(1.15)', colors: ['#ffe08f', '#f87838', '#912955'], opacity: .42 },
 };
-const layoutPresets = { mosaic: 'Mosaic · 6', strip: 'Slant · 4', seven: 'Mosaic · 7', hero: 'Hero · 5', grid: 'Grid · 6' };
-const captionStyles = { gloss: 'Afterglow Gloss', chrome: 'Liquid Chrome', tube: 'Electric Script', band: 'Skyline Block' };
-const captionFields = ['caption', 'subcaption', 'kicker', 'tagline'];
-const finishToggles = { 'grain-toggle': 'grain', 'vignette-toggle': 'vignette', 'badge-toggle': 'badge', 'furniture-toggle': 'furniture' };
-const treatment = { grade: 'sunset', strength: .85, layout: 'mosaic', style: 'gloss', ink: .16, grain: true, vignette: true, badge: true, furniture: true };
+const layoutPresets = { mosaic: 'Mosaic · 6', seven: 'Seven · 7', hero: 'Hero · 5', grid: 'Grid · 6', slant: 'Slant Seven · 7', solo: 'Solo Poster · 1' };
+const captionStyles = { ice: 'Ice Neon', gloss: 'Afterglow Gloss', chrome: 'Liquid Chrome', tube: 'Electric Script', band: 'Skyline Block' };
+const captionFields = ['caption', 'subcaption', 'kicker', 'tagline', 'review', 'source', 'billing', 'seal', 'ring', 'release', 'edition', 'title-font', 'script-font'];
+const finishToggles = { 'grain-toggle': 'grain', 'vignette-toggle': 'vignette', 'badge-toggle': 'badge', 'furniture-toggle': 'furniture', 'rain-toggle': 'rain' };
+const treatment = { grade: 'night', strength: .92, layout: 'seven', style: 'ice', ink: .10, grain: true, vignette: true, badge: true, furniture: true, rain: true };
 const initialPhotos = [
-  { name: 'Sunset Boulevard', src: '/samples/boulevard.jpg', tag: 'THE DRIVER', line: 'OCEAN DRIVE · 7:42 PM · LAST RIDE' },
-  { name: 'Blue Hour Pier', src: '/samples/pier.jpg', tag: 'THE ANGLER', line: 'SOUTH PIER · 8:11 PM · TIDE TURNING' },
+  { name: 'Boulevard Driver', src: '/samples/boulevard.jpg', tag: 'THE DRIVER', line: 'MOTOR ROW · 2:14 AM · NO PLATES' },
+  { name: 'Pier Watcher', src: '/samples/pier.jpg', tag: 'THE LOOKOUT', line: 'NORTH PIER · 2:19 AM · LAST FERRY' },
+  { name: 'Rainline Detective', src: '/samples/detective.svg', tag: 'THE FIXER', line: 'OLD TOWN · 2:07 AM · CASE OPEN' },
+  { name: 'Blue Room Singer', src: '/samples/singer.svg', tag: 'THE VOICE', line: 'BLUE ROOM · 2:11 AM · ONE MORE' },
+  { name: 'Night Shift Biker', src: '/samples/biker.svg', tag: 'THE RIDER', line: 'NORTH CUT · 2:23 AM · FULL THROTTLE' },
+  { name: 'Harbor Skipper', src: '/samples/skipper.svg', tag: 'THE SKIPPER', line: 'EAST CHANNEL · 2:31 AM · NO WAKE' },
+  { name: 'Last Run Driver', src: '/samples/driver.svg', tag: 'THE GETAWAY', line: 'GLASS MILE · 2:38 AM · LIGHTS OUT' },
 ];
 let photos = [];
 let frames = [];
@@ -43,34 +48,34 @@ function coverFrames(width, height) {
   if (treatment.layout === 'grid') {
     const columns = landscape ? 3 : 2;
     const rows = 6 / columns;
+    const area = landscape ? .887 : .69;
     return Array.from({ length: 6 }, (_, i) => {
       const left = (i % columns) / columns + .006;
-      const top = Math.floor(i / columns) / rows + .006;
+      const top = Math.floor(i / columns) * area / rows + .006;
       const right = left + 1 / columns - .012;
-      const bottom = top + 1 / rows - .012;
+      const bottom = top + area / rows - .012;
       return [[left,top],[right,top],[right,bottom],[left,bottom]];
     });
   }
   if (treatment.layout === 'hero') return [
-    [[0,0],[.62,0],[.59,.68],[0,.68]], [[.64,0],[1,0],[1,.32],[.62,.32]],
-    [[.63,.34],[1,.34],[1,.68],[.60,.68]], [[0,.70],[.48,.70],[.45,1],[0,1]],
-    [[.50,.70],[1,.70],[1,1],[.47,1]],
+    [[0,0],[.62,0],[.59,.46],[0,.46]], [[.64,0],[1,0],[1,.22],[.62,.22]],
+    [[.63,.24],[1,.24],[1,.46],[.60,.46]], [[0,.48],[.48,.48],[.45,.70],[0,.70]],
+    [[.50,.48],[1,.48],[1,.70],[.47,.70]],
   ];
   if (treatment.layout === 'seven') return [
-    [[0,0],[.55,0],[.51,.65],[0,.65]],
-    [[.57,0],[.78,0],[.76,.32],[.55,.32]],
-    [[.80,0],[1,0],[1,.32],[.78,.32]],
-    [[.55,.34],[1,.34],[1,.65],[.53,.65]],
-    [[0,.67],[.32,.67],[.29,1],[0,1]],
-    [[.34,.67],[.65,.67],[.62,1],[.31,1]],
-    [[.67,.67],[1,.67],[1,1],[.64,1]],
+    [[0,0],[.245,0],[.245,.405],[0,.405]], [[.255,0],[.495,0],[.495,.405],[.255,.405]],
+    [[.505,0],[.745,0],[.745,.405],[.505,.405]], [[.755,0],[1,0],[1,.405],[.755,.405]],
+    [[0,.419],[.327,.419],[.327,.704],[0,.704]], [[.337,.419],[.663,.419],[.663,.704],[.337,.704]],
+    [[.673,.419],[1,.419],[1,.704],[.673,.704]],
   ];
-  if (treatment.layout === 'strip') return [
-    [[0, 0], [.66, 0], [.57, 1], [0, 1]],
-    [[.68, 0], [1, 0], [1, .48], [.64, .48]],
-    [[.65, .50], [1, .50], [1, .76], [.62, .76]],
-    [[.60, .78], [1, .78], [1, 1], [.56, 1]],
+  if (treatment.layout === 'slant') return [
+    [[0,0],[.34,0],[.28,.33],[0,.33]], [[.36,0],[.68,0],[.63,.33],[.30,.33]], [[.70,0],[1,0],[1,.33],[.65,.33]],
+    [[0,.35],[.27,.35],[.23,.70],[0,.70]], [[.29,.35],[.52,.35],[.48,.70],[.25,.70]],
+    [[.54,.35],[.77,.35],[.73,.70],[.50,.70]], [[.79,.35],[1,.35],[1,.70],[.75,.70]],
   ];
+  if (treatment.layout === 'solo') return [landscape
+    ? [[.48,.034],[.974,.034],[.974,.869],[.48,.869]]
+    : [[.025,.025],[.975,.025],[.975,.704],[.025,.704]]];
   if (landscape) return [
     [[0,0],[.50,0],[.46,1],[0,1]], [[.52,0],[.75,0],[.73,.30],[.50,.30]],
     [[.77,0],[1,0],[1,.30],[.75,.30]], [[.50,.32],[1,.32],[1,.61],[.48,.61]],
@@ -130,7 +135,7 @@ function paintPhoto(frame, width, height) {
   pathFor(frame.points, width, height);
   ink.save();
   ink.clip();
-  applyColourGrade(frame, box, () => {
+  applyColourGrade(frame, box, photo.src.endsWith('.svg'), () => {
     ink.save();
     if (frame.flip) {
       ink.translate(box.x * 2 + box.w, 0);
@@ -142,7 +147,7 @@ function paintPhoto(frame, width, height) {
   ink.restore();
 }
 
-function applyColourGrade(frame, box, paint) {
+function applyColourGrade(frame, box, illustrated, paint) {
   const grade = gradePresets[frame.grade === 'global' || !frame.grade ? treatment.grade : frame.grade] || gradePresets[treatment.grade];
   ink.save();
   ink.filter = 'none';
@@ -155,12 +160,12 @@ function applyColourGrade(frame, box, paint) {
   ink.globalAlpha = 1;
   const overlay = ink.createLinearGradient(box.x, box.y, box.x + box.w, box.y + box.h);
   grade.colors.forEach((color, index) => overlay.addColorStop(index / 2, color));
-  ink.globalAlpha = grade.opacity * treatment.strength;
+  ink.globalAlpha = grade.opacity * treatment.strength * (illustrated ? .44 : 1);
   ink.globalCompositeOperation = 'color';
   ink.fillStyle = overlay;
   ink.fillRect(box.x, box.y, box.w, box.h);
   ink.globalCompositeOperation = 'source-over';
-  ink.globalAlpha = .18 * treatment.strength;
+  ink.globalAlpha = (illustrated ? .06 : .18) * treatment.strength;
   ink.fillRect(box.x, box.y, box.w, box.h);
   ink.restore();
 }
@@ -182,18 +187,38 @@ function posterInk(width, height) {
     shade.addColorStop(0, 'transparent'); shade.addColorStop(1, '#09031ba8');
     ink.fillStyle = shade; ink.fillRect(0, 0, width, height);
   }
+  if (treatment.rain) {
+    ink.globalCompositeOperation = 'screen';
+    ink.lineCap = 'round';
+    for (let i = 0; i < 145; i++) {
+      const x = (i * 7919 % width);
+      const y = (i * 3571 % height);
+      const length = Math.min(width, height) * (.018 + (i % 5) * .006);
+      ink.strokeStyle = i % 4 ? 'rgba(158,231,247,.37)' : 'rgba(255,127,205,.38)';
+      ink.lineWidth = Math.max(1, Math.min(width, height) * .0011);
+      ink.beginPath(); ink.moveTo(x, y); ink.lineTo(x - length * .32, y + length); ink.stroke();
+    }
+    for (let i = 0; i < 64; i++) {
+      const x = i * width / 64;
+      const y = height * (.82 + (i % 7) * .018);
+      const length = width * (.012 + (i % 4) * .006);
+      ink.strokeStyle = i % 2 ? 'rgba(53,208,231,.34)' : 'rgba(245,73,166,.31)';
+      ink.lineWidth = Math.max(2, Math.min(width, height) * .002);
+      ink.beginPath(); ink.moveTo(x, y); ink.lineTo(x + length, y + (i % 3) * 2); ink.stroke();
+    }
+  }
   ink.restore();
 }
 
 function drawStarburst(width, height) {
   if (!treatment.badge) return;
-  const radius = Math.min(width, height) * .087;
-  ink.save(); ink.translate(width * .87, height * .20); ink.rotate(.13);
+  const radius = Math.min(width, height) * .058;
+  ink.save(); ink.translate(width * .90, height * .805); ink.rotate(.13);
   ink.beginPath();
   for (let i = 0; i < 32; i++) { const a = i * Math.PI / 16; const r = radius * (i % 2 ? .81 : 1); ink.lineTo(Math.cos(a) * r, Math.sin(a) * r); }
   ink.closePath(); ink.fillStyle = '#ffd97c'; ink.strokeStyle = '#25102f'; ink.lineWidth = radius * .07; ink.fill(); ink.stroke();
-  ink.textAlign = 'center'; ink.fillStyle = '#25102f'; ink.font = `950 ${radius * .36}px Arial`; ink.fillText('NEW', 0, 0);
-  ink.font = `900 ${radius * .16}px Arial`; ink.fillText('SUMMER 2026', 0, radius * .28); ink.restore();
+  ink.textAlign = 'center'; ink.fillStyle = '#25102f'; ink.font = `950 ${radius * .31}px Arial`; ink.fillText(document.querySelector('#seal').value || 'BEST CAST', 0, -radius * .04, radius * 1.4);
+  ink.font = `900 ${radius * .14}px Arial`; ink.fillText(document.querySelector('#ring').value || 'RAINLINE FILM FESTIVAL', 0, radius * .23, radius * 1.55); ink.restore();
 }
 
 function outlineType(text, x, y, size, maxWidth, color, weight = 950) {
@@ -201,10 +226,11 @@ function outlineType(text, x, y, size, maxWidth, color, weight = 950) {
   ink.translate(x, y);
   ink.scale(.86, 1);
   let fontSize = size;
-  ink.font = `${weight} ${fontSize}px Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif`;
+  const selectedFont = document.querySelector('#title-font')?.value || 'Impact';
+  ink.font = `${weight} ${fontSize}px "${selectedFont}", Impact, sans-serif`;
   while (ink.measureText(text).width > maxWidth / .86 && fontSize > 12) {
     fontSize -= 2;
-    ink.font = `${weight} ${fontSize}px Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif`;
+    ink.font = `${weight} ${fontSize}px "${selectedFont}", Impact, sans-serif`;
   }
   ink.lineJoin = 'round';
   ink.strokeStyle = '#1b1021';
@@ -222,24 +248,25 @@ function drawNameTag(frame, width, height) {
   const box = bounds(frame.points, width, height);
   const unit = Math.min(width, height);
   const x = Math.min(...frame.points.slice(0, 2).map(([left]) => left * width)) + unit * .046;
-  const lowerPanel = box.y > height * .6;
+  const lowerPanel = box.y > height * .33;
   const topDetail = box.y < height * .02 && (width / height < .85 || box.w < width * .4);
-  const y = lowerPanel ? height * .855 : topDetail ? box.y + box.h - unit * .068 : box.y + unit * (box.y < height * .02 ? .053 : .023);
+  const y = lowerPanel || topDetail || treatment.layout === 'solo'
+    ? box.y + box.h - unit * .063 : box.y + unit * (box.y < height * .02 ? .053 : .023);
   const max = box.w - unit * .09;
   if (max <= 0) return;
   ink.save();
-  const size = unit * (lowerPanel ? .014 : .018);
+  const size = unit * (lowerPanel ? .016 : .018);
   ink.font = `900 ${size}px Arial`;
   const tagWidth = ink.measureText(tag.toUpperCase()).width;
   ink.font = `700 ${size * .66}px monospace`;
   const plate = Math.min(max, Math.max(tagWidth, ink.measureText(line || '').width));
   ink.fillStyle = '#190d25ee';
-  ink.fillRect(x, y, plate + size, size * (line && !lowerPanel ? 2.45 : 1.6));
+  ink.fillRect(x, y, plate + size, size * (line ? 2.45 : 1.6));
   ink.fillStyle = '#ffbe77';
-  ink.fillRect(x, y, size * .15, size * (line && !lowerPanel ? 2.45 : 1.6));
+  ink.fillRect(x, y, size * .15, size * (line ? 2.45 : 1.6));
   ink.font = `900 ${size}px Arial`;
   ink.fillText(tag.toUpperCase(), x + size * .53, y + size * 1.14, plate);
-  if (line && !lowerPanel) {
+  if (line) {
     ink.font = `700 ${size * .66}px monospace`;
     ink.fillStyle = '#fff4e9';
     ink.fillText(line.toUpperCase(), x + size * .53, y + size * 2.01, plate);
@@ -264,49 +291,56 @@ function drawFurniture(width, height) {
   ink.fillText(tagline, left + pitch * .7, rail + height * .03, right - left - ticket - pitch * 2);
   ink.font = `700 ${pitch * .77}px monospace`;
   ink.fillStyle = '#fff0dc';
-  ink.fillText('A SUNSET PICTURES PRODUCTION · STARRING YOU · SHOT ON YOUR OWN CAMERA · GRADED BY HAND',
+  ink.fillText(document.querySelector('#billing').value.toUpperCase(),
     left + pitch * .7, rail + height * .06, right - left - ticket - pitch * 2);
   ink.fillStyle = '#ffba76';
   ink.fillRect(right - ticket, rail, ticket, height * .078);
   ink.fillStyle = '#21132b';
   ink.font = `900 ${pitch * .97}px Arial`;
-  ink.fillText('NOW SHOWING', right - ticket + pitch * .6, rail + height * .029);
+  ink.fillText(document.querySelector('#release').value.toUpperCase(), right - ticket + pitch * .6, rail + height * .029, ticket * .60);
   ink.font = `700 ${pitch * .7}px monospace`;
-  ink.fillText('VOL. 1 / SEASON ONE', right - ticket + pitch * .6, rail + height * .049, ticket * .57);
-  ink.fillText('VICE CITY · 8:11 PM', right - ticket + pitch * .6, rail + height * .065, ticket * .57);
+  ink.fillText(document.querySelector('#edition').value.toUpperCase(), right - ticket + pitch * .6, rail + height * .049, ticket * .60);
+  ink.fillText('RAINLINE · 2:11 AM', right - ticket + pitch * .6, rail + height * .065, ticket * .57);
   for (let i = 0; i < 21; i++) {
     const bar = unit * .0021;
     ink.fillRect(right - pitch - (21 - i) * bar * 1.9, rail + height * .022, bar * (i % 3 ? 1 : .55), height * .041);
   }
   const quoteY = height * .009;
-  const quote = '★★★★★  “THE COAST COMES ALIVE”  /  THE AFTERLIGHT REVIEW';
+  const quote = `★★★★★  “${document.querySelector('#review').value.toUpperCase()}”  — ${document.querySelector('#source').value.toUpperCase()}`;
   ink.font = `900 ${pitch * .84}px Arial`;
   const quoteWidth = Math.min(ink.measureText(quote).width, width * .66);
   ink.fillStyle = '#160f25';
   ink.fillRect(right - quoteWidth - pitch, quoteY, quoteWidth + pitch, pitch * 1.45);
   ink.fillStyle = '#ffe5a8';
   ink.fillText(quote, right - quoteWidth - pitch * .5, quoteY + pitch, quoteWidth);
+  ink.fillStyle = '#101827';
+  ink.fillRect(left, rail - height * .026, unit * .22, height * .022);
+  ink.fillStyle = '#f4d4ee';
+  ink.font = `900 ${pitch * .82}px Arial`;
+  ink.fillText(document.querySelector('#release').value.toUpperCase(), left + pitch * .35, rail - height * .01, unit * .2);
   ink.restore();
 }
 
 function titleTreatment(width, height) {
   const compact = width / height < .85;
-  const base = Math.min(width * (compact ? .12 : .108), height * .19);
+  const split = treatment.layout === 'solo' && width / height > 1.25;
+  const base = Math.min(width * (split ? .08 : compact ? .12 : .105), height * (split ? .17 : compact ? .106 : .12));
   const title = (captionInput.value.trim() || 'YOUR STORY').toUpperCase();
-  let first = title;
   const second = document.querySelector('#subcaption').value.trim();
-  const y = height * (compact ? .78 : .72);
+  const horizontal = !split && width / height > 1.25;
+  const y = height * (split ? .55 : horizontal ? .851 : .819);
   ink.save();
-  const shadow = ink.createLinearGradient(0, y - base * 1.65, 0, height);
+  const shadow = ink.createLinearGradient(0, height * .704, 0, height);
   shadow.addColorStop(0, 'rgba(9,8,21,0)');
   shadow.addColorStop(.24, 'rgba(10,8,20,.77)');
   shadow.addColorStop(1, 'rgba(10,8,20,.72)');
   ink.fillStyle = shadow;
-  ink.fillRect(0, y - base * 1.8, width, height - y + base * 1.8);
+  if (!split) ink.fillRect(0, height * .704, width, height * .296);
   if (treatment.style === 'band') {
     const band = ink.createLinearGradient(0, y - base, width, height);
     band.addColorStop(0, '#df3085'); band.addColorStop(1, '#35136c');
-    ink.fillStyle = band; ink.fillRect(0, y - base * 1.3, width, height);
+    ink.fillStyle = band;
+    ink.fillRect(0, split ? height * .24 : height * .708, split ? width * .46 : width, height * (split ? .61 : .18));
     ink.fillStyle = '#160c32';
     for (let i = 0; i < 36; i++) { const h = base * (.15 + (i * 7 % 11) / 15); ink.fillRect(i * width / 35, height - h, width / 30, h); }
   }
@@ -315,20 +349,21 @@ function titleTreatment(width, height) {
   ink.shadowOffsetX = -width * .004;
   ink.shadowOffsetY = height * .008;
   const gloss = ink.createLinearGradient(0, y - base, 0, y);
-  const colors = treatment.style === 'chrome' ? ['#fffef3','#a1edff','#263c66','#fff4ff'] : ['#fff5b5','#ffc778','#ff72b9','#bc51e1'];
+  const colors = treatment.style === 'chrome' ? ['#fffef3','#a1edff','#263c66','#fff4ff'] : treatment.style === 'ice' ? ['#c4faff','#34e7ee','#ff79c5','#bd8bff'] : ['#fff5b5','#ffc778','#ff72b9','#bc51e1'];
   if (treatment.style === 'tube') { ink.shadowColor = '#75ffed'; ink.shadowBlur = base * .18; }
   if (treatment.style === 'band') { ink.shadowColor = '#ff70bc'; ink.shadowBlur = base * .04; }
   colors.forEach((color, index) => gloss.addColorStop(index / 3, color));
   ink.font = `800 ${base * .17}px Arial`;
   ink.fillStyle = '#ffd4e5';
-  ink.fillText(document.querySelector('#kicker').value.toUpperCase(), width * .055, y - base * 1.23);
-  outlineType(first, width * .047, y - base * .14, base, width * .90, gloss);
-  ink.font = `italic 900 ${base * .92}px "Brush Script MT", "Segoe Script", cursive`;
+  ink.fillText(document.querySelector('#kicker').value.toUpperCase(), width * .055, y - base * 1.04, width * .38);
+  outlineType(title, width * .047, y, base, width * (split ? .40 : horizontal ? .44 : .76), gloss);
+  const scriptFont = document.querySelector('#script-font')?.value || 'Brush Script MT';
+  ink.font = `italic 900 ${base * .82}px "${scriptFont}", "Segoe Script", cursive`;
   const scriptWidth = ink.measureText(second).width;
-  ink.save(); ink.translate(width * .08, y + base * .76);
-  ink.scale(Math.min(1, width * .82 / Math.max(1, scriptWidth)), 1);
+  ink.save(); ink.translate(width * (horizontal ? .52 : .058), y + base * (horizontal ? 0 : .62));
+  ink.scale(Math.min(1, width * (split ? .38 : horizontal ? .30 : .70) / Math.max(1, scriptWidth)), 1);
   ink.strokeStyle = '#25102f'; ink.lineWidth = base * .065; ink.strokeText(second, 0, 0);
-  ink.fillStyle = treatment.style === 'tube' ? '#a7fff1' : '#fff0f7'; ink.fillText(second, 0, 0); ink.restore();
+  ink.fillStyle = treatment.style === 'tube' || treatment.style === 'ice' ? '#ff9bd1' : '#fff0f7'; ink.fillText(second, 0, 0); ink.restore();
   ink.shadowColor = 'transparent';
   ink.shadowBlur = 0;
   const labelSize = Math.max(10, Math.min(width, height) * .017);
@@ -342,27 +377,35 @@ function titleTreatment(width, height) {
   ink.restore();
 }
 
-function drawCover() {
-  const width = canvas.width;
-  const height = canvas.height;
+function drawCover(target = canvas) {
   if (!photos.length) return;
+  const previousInk = ink;
+  ink = target.getContext('2d');
+  const width = target.width;
+  const height = target.height;
   ink.clearRect(0, 0, width, height);
   const background = ink.createLinearGradient(0, 0, width, height);
-  background.addColorStop(0, '#ffac69');
-  background.addColorStop(.5, '#ed579a');
-  background.addColorStop(1, '#39ced0');
+  background.addColorStop(0, '#071429');
+  background.addColorStop(.5, '#102b51');
+  background.addColorStop(1, '#131630');
   ink.fillStyle = background;
   ink.fillRect(0, 0, width, height);
   const points = coverFrames(width, height);
-  activeFrame = Math.min(activeFrame, points.length - 1);
-  frames = points.map((shape, index) => photos[frames[index]?.photo] ? frames[index] : newFrame(shape, index));
-  frames.forEach((frame, index) => { frame.points = points[index]; paintPhoto(frame, width, height); });
+  const renderFrames = points.map((shape, index) => ({
+    ...(photos[frames[index]?.photo] ? frames[index] : newFrame(shape, index)),
+    points: shape,
+  }));
+  if (target === canvas) {
+    activeFrame = Math.min(activeFrame, points.length - 1);
+    frames = renderFrames;
+  }
+  renderFrames.forEach((frame) => paintPhoto(frame, width, height));
   posterInk(width, height);
   const edge = Math.min(width, height) * .009;
   ink.lineJoin = 'miter';
-  ink.strokeStyle = '#fff1dc';
+  ink.strokeStyle = '#86eaf0';
   ink.lineWidth = edge * 1.2;
-  frames.forEach((frame) => { pathFor(frame.points, width, height); ink.stroke(); });
+  renderFrames.forEach((frame) => { pathFor(frame.points, width, height); ink.stroke(); });
   const titlePad = Math.min(width, height) * .026;
   ink.strokeStyle = '#20162a';
   ink.lineWidth = titlePad * .62;
@@ -372,7 +415,7 @@ function drawCover() {
   ink.strokeRect(titlePad * 1.35, titlePad * 1.35, width - titlePad * 2.7, height - titlePad * 2.7);
   titleTreatment(width, height);
   drawStarburst(width, height);
-  frames.forEach((frame) => drawNameTag(frame, width, height));
+  renderFrames.forEach((frame) => drawNameTag(frame, width, height));
   if (treatment.furniture) drawFurniture(width, height);
   const stamp = Math.min(width, height) * .012;
   ink.font = `900 ${stamp}px Arial, sans-serif`;
@@ -380,19 +423,30 @@ function drawCover() {
   ink.fillStyle = '#fff4e4';
   ink.shadowColor = '#100a1a';
   ink.shadowBlur = stamp * 1.5;
-  ink.fillText('VICE CITY    •    26', width * .055, height * .021);
+  ink.fillText('RAINLINE    •    2:11 AM', width * .055, height * .021);
   ink.textAlign = 'right';
   ink.fillStyle = '#ffe5da';
-  if (!treatment.furniture) ink.fillText('AFTERGLOW  /  NO. 06', width * .945, height * .021);
+  if (!treatment.furniture) ink.fillText('RAINLINE COVER LAB  /  NO. 01', width * .945, height * .021);
   ink.textAlign = 'left';
   ink.shadowBlur = 0;
-  if (document.body.classList.contains('editing')) {
+  if (target === canvas && document.body.classList.contains('editing')) {
     pathFor(frames[activeFrame].points, width, height);
     ink.setLineDash([width * .008, width * .006]);
     ink.lineWidth = width * .004;
     ink.strokeStyle = '#76f4e2';
     ink.stroke();
     ink.setLineDash([]);
+  }
+  ink = previousInk;
+  if (target === canvas) updateExportPreviews();
+}
+
+function updateExportPreviews() {
+  for (const [id, format] of [['export-square', 'square'], ['export-portrait', 'portrait'], ['export-landscape', 'landscape']]) {
+    const preview = document.getElementById(id);
+    if (!preview) continue;
+    [preview.width, preview.height] = sizes[format];
+    drawCover(preview);
   }
 }
 
@@ -427,7 +481,7 @@ function setFormat(format) {
   canvas.width = width;
   canvas.height = height;
   const frame = document.querySelector('.stage');
-  const scale = document.body.classList.contains('poster-view') ? Math.min(innerWidth / width, innerHeight / height) : Math.min(frame.parentElement.clientWidth / width, 440 / height);
+  const scale = document.body.classList.contains('poster-view') ? Math.min(innerWidth / width, innerHeight / height) : Math.min(frame.parentElement.clientWidth / width, 340 / height);
   frame.style.width = `${width * scale}px`;
   frame.style.height = `${height * scale}px`;
   frame.style.aspectRatio = `${width} / ${height}`;
@@ -486,25 +540,23 @@ function shufflePanels() {
   showFrameControls();
 }
 
+async function exportFormat(format) {
+  const [width, height] = sizes[format];
+  const output = document.createElement('canvas');
+  output.width = width;
+  output.height = height;
+  drawCover(output);
+  const blob = await new Promise((resolve) => output.toBlob(resolve, 'image/png'));
+  if (!blob) return;
+  const link = document.createElement('a');
+  link.download = `rainline-${captionInput.value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'cover'}-${width}x${height}.png`;
+  link.href = URL.createObjectURL(blob);
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(link.href), 1200);
+}
+
 function exportCover() {
-  const [width, height] = sizes[outputSize];
-  const previous = [canvas.width, canvas.height];
-  const wasEditing = document.body.classList.contains('editing');
-  document.body.classList.remove('editing');
-  canvas.width = width;
-  canvas.height = height;
-  drawCover();
-  canvas.toBlob((blob) => {
-    if (!blob) return;
-    const link = document.createElement('a');
-    link.download = `afterglow-${captionInput.value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'cover'}-${width}x${height}.png`;
-    link.href = URL.createObjectURL(blob);
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(link.href), 1200);
-  }, 'image/png');
-  document.body.classList.toggle('editing', wasEditing);
-  [canvas.width, canvas.height] = previous;
-  drawCover();
+  return exportFormat(outputSize);
 }
 
 function closestFrame(event) {
@@ -580,20 +632,19 @@ function restoreEdit(offset) {
 
 function setSceneCrops(scene, width, height) {
   const scenes = {
-    lead: [[0,1,55,0], [1,1,48,0], [0,1.8,0,100], [0,1,52,14], [1,2,100,100], [0,2,0,100]],
-    story: [[1,1,31,0], [0,1.14,63,0], [0,2,0,100], [1,2,100,100], [1,1.7,100,80], [0,1.7,0,100]],
-    midnight: [[1,1,42,0], [0,1,58,0], [1,2,100,100], [0,2,0,100], [0,2,0,100], [1,2,100,100], [0,2,0,100]],
+    lead: [[0,1.04,50,10], [1,1.04,53,15], [2,1.04,50,16], [3,1.04,50,14], [4,1.05,50,26], [5,1.05,50,42], [6,1.05,50,33]],
+    story: [[2,1.1,50,18], [3,1.03,50,12], [4,1.03,50,14], [5,1.03,50,30], [6,1.03,50,28]],
+    solo: [[4,1.05,50,12]],
   };
   if (!scenes[scene] || photos.length < 2) return;
   frames = coverFrames(width, height).map((points, index) => {
     const crop = scenes[scene][index];
-    if (!crop) return newFrame(points, index);
+    if (!crop || !photos[crop[0]]) return newFrame(points, index);
     const [photo, zoom, x, y] = crop;
     const frame = { points, photo, zoom, x, y };
-    const detail = (scene === 'lead' && [2,4,5].includes(index)) || (scene === 'story' && index >= 2) || (scene === 'midnight' && index >= 2);
-    if (detail) {
-      frame.tag = photo === 0 ? 'THE GETAWAY' : 'THE CATCH';
-      frame.line = photo === 0 ? 'COAST ROAD · ENGINE STILL WARM' : 'SOUTH PIER · NO LOOSE ENDS';
+    if ((scene === 'lead' && index > 0) || (scene === 'story' && index > 0)) {
+      frame.tag = photos[photo].tag;
+      frame.line = photos[photo].line;
     }
     return frame;
   });
@@ -611,16 +662,19 @@ async function start() {
   treatment.badge = params.get('badge') !== 'off';
   treatment.grain = params.get('grain') !== 'off';
   treatment.vignette = params.get('vignette') !== 'off';
+  treatment.rain = params.get('rain') !== 'off';
   if (!poster) document.body.classList.add('editing');
   if (params.has('caption')) captionInput.value = params.get('caption').slice(0, 28);
-  document.querySelector('#subcaption').value = params.get('sub') || 'Vice City';
-  document.querySelector('#kicker').value = params.get('kicker') || 'Welcome to';
-  document.querySelector('#tagline').value = params.get('tagline') || 'TWO STRANGERS · ONE COAST · LAST LIGHT';
+  document.querySelector('#subcaption').value = params.get('sub') || 'Rainline';
+  document.querySelector('#kicker').value = params.get('kicker') || 'WELCOME TO THE WET SIDE';
+  document.querySelector('#tagline').value = params.get('tagline') || 'SEVEN STRANGERS · ONE CITY · NO DRY LAND';
+  if (params.has('review')) document.querySelector('#review').value = params.get('review');
+  if (params.has('source')) document.querySelector('#source').value = params.get('source');
   syncFinishControls();
   const loaded = await Promise.allSettled(initialPhotos.map(loadPhoto));
   photos = loaded.flatMap((result) => result.status === 'fulfilled' ? [result.value] : []);
   const selected = Object.hasOwn(sizes, params.get('size')) ? params.get('size') : 'landscape';
-  setSceneCrops(params.get('scene') || (selected === 'landscape' && treatment.layout === 'mosaic' ? 'lead' : ''), ...sizes[selected]);
+  setSceneCrops(params.get('scene') || (selected === 'landscape' && treatment.layout === 'seven' ? 'lead' : ''), ...sizes[selected]);
   setFormat(selected);
   if (params.has('panelGradeIndex')) {
     const index = Number(params.get('panelGradeIndex'));
@@ -636,7 +690,10 @@ async function start() {
     document.querySelector('#char-count').textContent = `${captionInput.value.length} / 28`;
     drawCover();
   });
-  ['subcaption', 'kicker', 'tagline'].forEach((id) => document.querySelector(`#${id}`).addEventListener('input', drawCover));
+  captionFields.filter((id) => id !== 'caption').forEach((id) => {
+    document.getElementById(id).addEventListener('input', drawCover);
+    document.getElementById(id).addEventListener('change', drawCover);
+  });
   document.querySelector('#grades').addEventListener('click', (event) => {
     const button = event.target.closest('[data-grade]'); if (!button) return;
     treatment.grade = button.dataset.grade;
@@ -737,6 +794,15 @@ async function start() {
     if (button) setFormat(button.dataset.size);
   });
   document.querySelector('#export').addEventListener('click', exportCover);
+  document.querySelector('#export-all').addEventListener('click', async (event) => {
+    const button = event.currentTarget;
+    button.disabled = true;
+    try {
+      for (const format of ['square', 'portrait', 'landscape']) await exportFormat(format);
+    } finally {
+      button.disabled = false;
+    }
+  });
   document.querySelector('#save').addEventListener('click', exportCover);
   Object.keys(knobs).forEach((name) => knobs[name].addEventListener('input', () => setCropValue(name)));
   canvas.addEventListener('pointerdown', (event) => {

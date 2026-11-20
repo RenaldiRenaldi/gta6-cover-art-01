@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 640">
+  <defs>
+    <linearGradient id="alley" x2="0" y2="1"><stop stop-color="#17264b"/><stop offset=".65" stop-color="#211933"/><stop offset="1" stop-color="#091421"/></linearGradient>
+    <linearGradient id="shirt" x2="1" y2="1"><stop stop-color="#45d5df"/><stop offset="1" stop-color="#345589"/></linearGradient>
+    <radialGradient id="pink"><stop stop-color="#f348a5" stop-opacity=".8"/><stop offset="1" stop-color="#f348a5" stop-opacity="0"/></radialGradient>
+  </defs>
+  <path fill="url(#alley)" d="M0 0h480v640H0z"/><circle cx="115" cy="187" r="158" fill="url(#pink)"/>
+  <path fill="#111b31" d="M0 301h48V120h48v181h39V84h48v217h39V147h48v154h42V100h44v201h47V140h48v161h29v339H0z"/>
+  <path fill="#ec4ba8" d="M51 172h9v129h-9zm251-23h8v152h-8zm100 35h8v117h-8z"/>
+  <path fill="#09151f" d="M0 426h480v214H0z"/><path fill="#dc408e" fill-opacity=".6" d="M24 566h432v6H24z"/><path fill="#42d9e0" fill-opacity=".44" d="M67 610h349v5H67z"/>
+  <path fill="#101927" d="M0 478q109-36 228-21l252 36v90H0z"/><path fill="#27364b" d="M34 488q113-40 217-17l191 35-31 31H50z"/><path fill="#ef4b9e" d="M76 496h252v9H76z"/>
+  <path fill="#c98e82" d="M193 247q1-58 48-67 49 8 53 70l-9 48q-18 23-47 22-29-2-43-32z"/>
+  <path fill="#111727" d="M184 250q-11-91 58-99 71 6 66 95l-20-31-87 1-8 48z"/><path fill="#ee4e9d" d="M188 237h115v9H188z"/>
+  <path fill="#171e30" d="M208 313q33 19 65-2v41l-31 35-34-37z"/><path fill="url(#shirt)" d="M147 640q6-195 62-252l36 22 39-23q62 70 70 253z"/>
+  <path fill="#15243a" d="m209 388 36 40 39-40 28 47-67 93-68-89z"/><path fill="#f2d6c5" d="m240 424 9 0 20 216h-49z"/>
+  <path fill="#182035" d="M211 270h23v6h-23zm35 0h23v6h-23z"/><path fill="none" stroke="#743850" stroke-width="3" d="M228 296q13 7 25-2"/>
+  <path fill="none" stroke="#8ff7ff" stroke-width="3" d="M185 227q-2-50 38-70m-15 235q-36 37-49 104m-106 32h49m266-11h42"/>
+  <g stroke="#dbf5ff" stroke-opacity=".34" stroke-width="2"><path d="m19 17-19 91m95-72-18 92m211-105-18 95m95-80-17 91m76-105-20 99M66 300l-19 88m171-74-18 92m234-89-18 91M27 396l-18 91m139-42-19 96m215-99-18 91m101-80-19 95M85 510l-19 94m261-78-17 92"/></g>
+</svg>

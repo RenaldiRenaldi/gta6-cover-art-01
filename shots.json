@@ -1,6 +1,6 @@
 [
-  {"name":"1-afterglow.jpg","query":"?poster&caption=NEON%20FELONY&sub=Vice%20City&grade=sunset&layout=mosaic&style=gloss&ink=.16&strength=.85&panelGradeIndex=2&panelGrade=night&size=landscape","w":1280,"h":720},
-  {"name":"2-studio.jpg","query":"?size=landscape&panel=1&grade=sunset&layout=mosaic&style=gloss&ink=.16&strength=.85","w":1280,"h":1150},
-  {"name":"3-stories.jpg","query":"?poster&scene=story&caption=TIDAL%20SHIFT&sub=Last%20Ferry&kicker=South%20Pier%20Transmission&tagline=NO%20SIGNAL%20%C2%B7%20LAST%20BOAT%20%C2%B7%20HIGH%20TIDE&grade=night&layout=grid&style=tube&ink=.10&strength=.86&size=story","w":720,"h":1280},
-  {"name":"4-midnight.jpg","query":"?poster&scene=midnight&caption=MIDNIGHT%20RUN&sub=After%20Dark&tagline=LIGHTS%20DOWN%20%C2%B7%20ENGINE%20ON&grade=night&layout=seven&style=tube&ink=.12&strength=.86&panelGradeIndex=0&panelGrade=mono&size=landscape","w":1280,"h":720}
+  {"name":"1-rainline.jpg","query":"?poster&scene=lead&caption=LAST%20LIGHT&sub=Rainline&kicker=WELCOME%20TO%20THE%20WET%20SIDE&tagline=SEVEN%20STRANGERS%20%C2%B7%20ONE%20CITY%20%C2%B7%20NO%20DRY%20LAND&review=RAIN-SLICKED%20AND%20LETHAL&source=THE%20RAINLINE%20GAZETTE&grade=night&layout=seven&style=ice&ink=.10&strength=.92&size=landscape","w":1280,"h":720},
+  {"name":"2-studio.jpg","query":"?size=landscape&scene=lead&panel=2&panelGradeIndex=2&panelGrade=teal&grade=night&layout=seven&style=ice&ink=.10&strength=.92","w":1280,"h":1150},
+  {"name":"3-stories.jpg","query":"?poster&scene=story&caption=LAST%20FERRY&sub=Rainline%20Nights&kicker=THE%20EAST%20CHANNEL&tagline=FIVE%20VOICES%20%C2%B7%20ONE%20LAST%20CROSSING&grade=teal&layout=hero&style=ice&ink=.08&strength=.90&size=story","w":720,"h":1280},
+  {"name":"4-solo.jpg","query":"?poster&scene=solo&caption=LAST%20LIGHT&sub=After%20the%20Rain&kicker=THE%20RIDER&tagline=ONE%20FACE%20%C2%B7%20NO%20WAY%20HOME&grade=night&layout=solo&style=ice&ink=.10&strength=.92&size=landscape","w":1280,"h":720}
 ]
