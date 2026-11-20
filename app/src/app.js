@@ -20,11 +20,11 @@ const treatment = { grade: 'night', strength: .92, layout: 'seven', style: 'ice'
 const initialPhotos = [
   { name: 'Boulevard Driver', src: '/samples/boulevard.jpg', tag: 'THE DRIVER', line: 'MOTOR ROW · 2:14 AM · NO PLATES' },
   { name: 'Pier Watcher', src: '/samples/pier.jpg', tag: 'THE LOOKOUT', line: 'NORTH PIER · 2:19 AM · LAST FERRY' },
-  { name: 'Rainline Detective', src: '/samples/detective.svg', tag: 'THE FIXER', line: 'OLD TOWN · 2:07 AM · CASE OPEN' },
-  { name: 'Blue Room Singer', src: '/samples/singer.svg', tag: 'THE VOICE', line: 'BLUE ROOM · 2:11 AM · ONE MORE' },
-  { name: 'Night Shift Biker', src: '/samples/biker.svg', tag: 'THE RIDER', line: 'NORTH CUT · 2:23 AM · FULL THROTTLE' },
-  { name: 'Harbor Skipper', src: '/samples/skipper.svg', tag: 'THE SKIPPER', line: 'EAST CHANNEL · 2:31 AM · NO WAKE' },
-  { name: 'Last Run Driver', src: '/samples/driver.svg', tag: 'THE GETAWAY', line: 'GLASS MILE · 2:38 AM · LIGHTS OUT' },
+  { name: 'Boulevard Fixer', src: '/samples/boulevard.jpg', tag: 'THE FIXER', line: 'OLD TOWN · 2:07 AM · CASE OPEN' },
+  { name: 'Pier Voice', src: '/samples/pier.jpg', tag: 'THE VOICE', line: 'BLUE ROOM · 2:11 AM · ONE MORE' },
+  { name: 'Boulevard Rider', src: '/samples/boulevard.jpg', tag: 'THE RIDER', line: 'NORTH CUT · 2:23 AM · FULL THROTTLE' },
+  { name: 'Pier Skipper', src: '/samples/pier.jpg', tag: 'THE SKIPPER', line: 'EAST CHANNEL · 2:31 AM · NO WAKE' },
+  { name: 'Boulevard Getaway', src: '/samples/boulevard.jpg', tag: 'THE GETAWAY', line: 'GLASS MILE · 2:38 AM · LIGHTS OUT' },
 ];
 let photos = [];
 let frames = [];
@@ -104,7 +104,8 @@ function pathFor(points, width, height) {
 }
 
 function newFrame(points, index) {
-  return { points, photo: index % photos.length, zoom: 1, x: 50, y: 0 };
+  const photo = index % photos.length;
+  return { points, photo, zoom: 1, x: 50, y: 0, ...photos[photo]?.crop };
 }
 
 function suggestedTag(frame) {
@@ -114,10 +115,7 @@ function suggestedTag(frame) {
 
 function assignPhoto(frame, photo) {
   frame.photo = photo;
-  frame.zoom = 1;
-  frame.x = 50;
-  frame.y = 0;
-  frame.flip = false;
+  Object.assign(frame, { zoom: 1, x: 50, y: 0, flip: false, grade: undefined }, photos[photo]?.crop);
   delete frame.tag;
   delete frame.line;
 }
@@ -135,7 +133,7 @@ function paintPhoto(frame, width, height) {
   pathFor(frame.points, width, height);
   ink.save();
   ink.clip();
-  applyColourGrade(frame, box, photo.src.endsWith('.svg'), () => {
+  applyColourGrade(frame, box, () => {
     ink.save();
     if (frame.flip) {
       ink.translate(box.x * 2 + box.w, 0);
@@ -147,7 +145,7 @@ function paintPhoto(frame, width, height) {
   ink.restore();
 }
 
-function applyColourGrade(frame, box, illustrated, paint) {
+function applyColourGrade(frame, box, paint) {
   const grade = gradePresets[frame.grade === 'global' || !frame.grade ? treatment.grade : frame.grade] || gradePresets[treatment.grade];
   ink.save();
   ink.filter = 'none';
@@ -160,12 +158,12 @@ function applyColourGrade(frame, box, illustrated, paint) {
   ink.globalAlpha = 1;
   const overlay = ink.createLinearGradient(box.x, box.y, box.x + box.w, box.y + box.h);
   grade.colors.forEach((color, index) => overlay.addColorStop(index / 2, color));
-  ink.globalAlpha = grade.opacity * treatment.strength * (illustrated ? .44 : 1);
+  ink.globalAlpha = grade.opacity * treatment.strength;
   ink.globalCompositeOperation = 'color';
   ink.fillStyle = overlay;
   ink.fillRect(box.x, box.y, box.w, box.h);
   ink.globalCompositeOperation = 'source-over';
-  ink.globalAlpha = (illustrated ? .06 : .18) * treatment.strength;
+  ink.globalAlpha = .18 * treatment.strength;
   ink.fillRect(box.x, box.y, box.w, box.h);
   ink.restore();
 }
@@ -632,16 +630,16 @@ function restoreEdit(offset) {
 
 function setSceneCrops(scene, width, height) {
   const scenes = {
-    lead: [[0,1.04,50,10], [1,1.04,53,15], [2,1.04,50,16], [3,1.04,50,14], [4,1.05,50,26], [5,1.05,50,42], [6,1.05,50,33]],
-    story: [[2,1.1,50,18], [3,1.03,50,12], [4,1.03,50,14], [5,1.03,50,30], [6,1.03,50,28]],
-    solo: [[4,1.05,50,12]],
+    lead: [[0,1.70,65,0], [1,1.70,25,0], [2,1.45,62,0], [3,1.40,28,0], [4,1.20,64,12], [5,1.20,27,10], [6,1.12,58,11]],
+    story: [[2,1.45,62,0], [3,1.22,33,5], [4,1.18,65,4], [5,1.22,27,8], [6,1.10,60,8]],
+    solo: [[4,1.65,65,3]],
   };
   if (!scenes[scene] || photos.length < 2) return;
   frames = coverFrames(width, height).map((points, index) => {
     const crop = scenes[scene][index];
     if (!crop || !photos[crop[0]]) return newFrame(points, index);
     const [photo, zoom, x, y] = crop;
-    const frame = { points, photo, zoom, x, y };
+    const frame = { points, photo, ...photos[photo].crop, zoom, x, y };
     if ((scene === 'lead' && index > 0) || (scene === 'story' && index > 0)) {
       frame.tag = photos[photo].tag;
       frame.line = photos[photo].line;
@@ -673,6 +671,16 @@ async function start() {
   syncFinishControls();
   const loaded = await Promise.allSettled(initialPhotos.map(loadPhoto));
   photos = loaded.flatMap((result) => result.status === 'fulfilled' ? [result.value] : []);
+  const castCrops = [
+    { zoom: 1.70, x: 65, y: 0 },
+    { zoom: 1.70, x: 25, y: 0 },
+    { zoom: 1.45, x: 62, y: 0, flip: true, grade: 'teal' },
+    { zoom: 1.40, x: 28, y: 0, flip: true, grade: 'sunset' },
+    { zoom: 1.20, x: 64, y: 12 },
+    { zoom: 1.20, x: 27, y: 10, grade: 'teal' },
+    { zoom: 1.12, x: 58, y: 11, flip: true },
+  ];
+  photos.forEach((photo) => { photo.crop = castCrops[initialPhotos.findIndex(({ name }) => name === photo.name)]; });
   const selected = Object.hasOwn(sizes, params.get('size')) ? params.get('size') : 'landscape';
   setSceneCrops(params.get('scene') || (selected === 'landscape' && treatment.layout === 'seven' ? 'lead' : ''), ...sizes[selected]);
   setFormat(selected);
