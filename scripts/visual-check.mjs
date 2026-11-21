@@ -25,11 +25,12 @@ try {
     assert.equal(sources.length, 7);
     assert(sources.every((source) => ['/samples/boulevard.jpg', '/samples/pier.jpg'].includes(source)));
     const regions = name === '1-rainline.jpg'
-      ? [[0,0,.245,.405], [.255,0,.24,.405], [.505,0,.24,.405], [.755,0,.245,.405], [0,.419,.327,.285], [.337,.419,.326,.285], [.673,.419,.327,.285]]
+      ? [[0,0,.495,.46], [.505,0,.495,.46], [0,.474,.495,.23], [.505,.474,.495,.23]]
       : name === '3-stories.jpg'
         ? [[0,0,.62,.46], [.62,0,.38,.22], [.60,.24,.40,.22], [0,.48,.48,.22], [.47,.48,.53,.22]]
         : [[.48,.034,.494,.835]];
     const dimensions = await page.locator('#art').evaluate(({ width, height }) => ({ width, height }));
+    assert.equal(regions.length, name === '1-rainline.jpg' ? 4 : name === '3-stories.jpg' ? 5 : 1);
     const panels = regions.map(([x, y, w, h]) => ({ box: { x: x * dimensions.width, y: y * dimensions.height, w: w * dimensions.width, h: h * dimensions.height } }));
     for (const [index, { box }] of panels.entries()) {
       const panel = await page.evaluate(({ x, y, w, h }) => {

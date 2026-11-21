@@ -12,11 +12,11 @@ const gradePresets = {
   teal: { name: 'Tropic Teal', filter: 'saturate(1.21) contrast(1.12)', colors: ['#ffd089', '#32cfb7', '#075e72'], opacity: .46 },
   heat: { name: 'Heatwave', filter: 'sepia(.24) saturate(1.55) contrast(1.15)', colors: ['#ffe08f', '#f87838', '#912955'], opacity: .42 },
 };
-const layoutPresets = { mosaic: 'Mosaic · 6', seven: 'Seven · 7', hero: 'Hero · 5', grid: 'Grid · 6', slant: 'Slant Seven · 7', solo: 'Solo Poster · 1' };
+const layoutPresets = { mosaic: 'Mosaic · 6', seven: 'Seven · 7', hero: 'Hero', grid: 'Grid · 6', slant: 'Slant Seven · 7', solo: 'Solo Poster · 1' };
 const captionStyles = { ice: 'Ice Neon', gloss: 'Afterglow Gloss', chrome: 'Liquid Chrome', tube: 'Electric Script', band: 'Skyline Block' };
 const captionFields = ['caption', 'subcaption', 'kicker', 'tagline', 'review', 'source', 'billing', 'seal', 'ring', 'release', 'edition', 'title-font', 'script-font'];
 const finishToggles = { 'grain-toggle': 'grain', 'vignette-toggle': 'vignette', 'badge-toggle': 'badge', 'furniture-toggle': 'furniture', 'rain-toggle': 'rain' };
-const treatment = { grade: 'night', strength: .92, layout: 'seven', style: 'ice', ink: .10, grain: true, vignette: true, badge: true, furniture: true, rain: true };
+const treatment = { grade: 'night', strength: .92, layout: 'hero', style: 'ice', ink: .10, grain: true, vignette: true, badge: true, furniture: true, rain: true };
 const initialPhotos = [
   { name: 'Boulevard Driver', src: '/samples/boulevard.jpg', tag: 'THE DRIVER', line: 'MOTOR ROW · 2:14 AM · NO PLATES' },
   { name: 'Pier Watcher', src: '/samples/pier.jpg', tag: 'THE LOOKOUT', line: 'NORTH PIER · 2:19 AM · LAST FERRY' },
@@ -57,6 +57,11 @@ function coverFrames(width, height) {
       return [[left,top],[right,top],[right,bottom],[left,bottom]];
     });
   }
+  if (treatment.layout === 'hero' && landscape) return [
+    [[0,0],[.495,0],[.495,.46],[0,.46]], [[.505,0],[1,0],[1,.46],[.505,.46]],
+    [[0,.474],[.495,.474],[.495,.704],[0,.704]],
+    [[.505,.474],[1,.474],[1,.704],[.505,.704]],
+  ];
   if (treatment.layout === 'hero') return [
     [[0,0],[.62,0],[.59,.46],[0,.46]], [[.64,0],[1,0],[1,.22],[.62,.22]],
     [[.63,.24],[1,.24],[1,.46],[.60,.46]], [[0,.48],[.48,.48],[.45,.70],[0,.70]],
@@ -629,8 +634,11 @@ function restoreEdit(offset) {
 }
 
 function setSceneCrops(scene, width, height) {
+  const rainLead = scene === 'lead' && treatment.layout === 'hero' && width / height > 1.25;
   const scenes = {
-    lead: [[0,1.70,65,0], [1,1.70,25,0], [2,1.45,62,0], [3,1.40,28,0], [4,1.20,64,12], [5,1.20,27,10], [6,1.12,58,11]],
+    lead: rainLead
+      ? [[0,1.08,65,0], [1,1,25,-12], [0,1.3,0,80], [1,1.3,100,72]]
+      : [[0,1.70,65,0], [1,1.70,25,0], [2,1.45,62,0], [3,1.40,28,0], [4,1.20,64,12], [5,1.20,27,10], [6,1.12,58,11]],
     story: [[2,1.45,62,0], [3,1.22,33,5], [4,1.18,65,4], [5,1.22,27,8], [6,1.10,60,8]],
     solo: [[4,1.65,65,3]],
   };
@@ -643,6 +651,10 @@ function setSceneCrops(scene, width, height) {
     if ((scene === 'lead' && index > 0) || (scene === 'story' && index > 0)) {
       frame.tag = photos[photo].tag;
       frame.line = photos[photo].line;
+    }
+    if (rainLead && index >= 2) {
+      frame.tag = ['THE GETAWAY', 'EAST CHANNEL'][index - 2];
+      frame.line = ['2:23 AM · NO PLATES', '2:31 AM · LAST CROSSING'][index - 2];
     }
     return frame;
   });
@@ -665,7 +677,7 @@ async function start() {
   if (params.has('caption')) captionInput.value = params.get('caption').slice(0, 28);
   document.querySelector('#subcaption').value = params.get('sub') || 'Rainline';
   document.querySelector('#kicker').value = params.get('kicker') || 'WELCOME TO THE WET SIDE';
-  document.querySelector('#tagline').value = params.get('tagline') || 'SEVEN STRANGERS · ONE CITY · NO DRY LAND';
+  document.querySelector('#tagline').value = params.get('tagline') || (params.get('scene') === 'story' ? 'ONE LAST CROSSING' : 'ONE CITY · NO DRY LAND');
   if (params.has('review')) document.querySelector('#review').value = params.get('review');
   if (params.has('source')) document.querySelector('#source').value = params.get('source');
   syncFinishControls();
@@ -682,7 +694,7 @@ async function start() {
   ];
   photos.forEach((photo) => { photo.crop = castCrops[initialPhotos.findIndex(({ name }) => name === photo.name)]; });
   const selected = Object.hasOwn(sizes, params.get('size')) ? params.get('size') : 'landscape';
-  setSceneCrops(params.get('scene') || (selected === 'landscape' && treatment.layout === 'seven' ? 'lead' : ''), ...sizes[selected]);
+  setSceneCrops(params.get('scene') || (selected === 'landscape' && ['hero', 'seven'].includes(treatment.layout) ? 'lead' : ''), ...sizes[selected]);
   setFormat(selected);
   if (params.has('panelGradeIndex')) {
     const index = Number(params.get('panelGradeIndex'));
