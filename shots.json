@@ -1,6 +1,6 @@
 [
   {"name":"1-rainline.jpg","query":"?poster&scene=lead&layout=hero&caption=LAST%20LIGHT&sub=Rainline&kicker=WELCOME%20TO%20THE%20WET%20SIDE&tagline=ONE%20CITY%20%C2%B7%20NO%20DRY%20LAND&review=RAIN-SLICKED%20AND%20LETHAL&source=THE%20RAINLINE%20GAZETTE&grade=night&style=ice&ink=.10&strength=.92&size=landscape","w":1280,"h":720},
-  {"name":"2-studio.jpg","query":"?size=landscape&scene=lead&panel=2&panelGradeIndex=2&panelGrade=teal&grade=night&layout=seven&style=ice&ink=.10&strength=.92","w":1280,"h":1150},
-  {"name":"3-stories.jpg","query":"?poster&scene=story&layout=hero&caption=LAST%20FERRY&sub=Rainline%20Nights&kicker=THE%20EAST%20CHANNEL&tagline=ONE%20LAST%20CROSSING&grade=teal&style=ice&ink=.08&strength=.90&size=story","w":720,"h":1280},
+  {"name":"2-studio.jpg","query":"?size=landscape&scene=lead&panel=2&panelGradeIndex=2&panelGrade=teal&grade=night&layout=hero&style=ice&ink=.10&strength=.92","w":1280,"h":1150},
+  {"name":"3-stories.jpg","query":"?poster&scene=story&layout=hero&caption=LAST%20LIGHT&sub=Rainline%20Nights&kicker=THE%20EAST%20CHANNEL&tagline=ONE%20LAST%20CROSSING&grade=night&style=ice&ink=.10&strength=.92&size=story","w":720,"h":1280},
   {"name":"4-solo.jpg","query":"?poster&scene=solo&caption=LAST%20LIGHT&sub=After%20the%20Rain&kicker=THE%20RIDER&tagline=ONE%20FACE%20%C2%B7%20NO%20WAY%20HOME&grade=night&layout=solo&style=ice&ink=.10&strength=.92&size=landscape","w":1280,"h":720}
 ]

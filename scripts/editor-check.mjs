@@ -68,6 +68,7 @@ try {
   await expectBatch();
   async function expectBatch() {
     await page.waitForFunction(() => !document.querySelector('#export-all').disabled);
+    await page.waitForTimeout(500);
     assert.deepEqual(batch.map((name) => name.match(/\d+x\d+(?=\.png)/)?.[0]),
       ['1080x1080', '1080x1350', '1920x1080']);
   }

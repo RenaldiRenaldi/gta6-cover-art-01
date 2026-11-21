@@ -30,6 +30,7 @@ let photos = [];
 let frames = [];
 let activeFrame = 0;
 let outputSize = 'portrait';
+let storyCut = false;
 let dragPoint = null;
 const history = [];
 let historyIndex = -1;
@@ -62,6 +63,12 @@ function coverFrames(width, height) {
     [[0,.474],[.495,.474],[.495,.704],[0,.704]],
     [[.505,.474],[1,.474],[1,.704],[.505,.704]],
   ];
+  if (treatment.layout === 'hero' && storyCut) return [
+    [[0,0],[.62,0],[.59,.445],[0,.445]],
+    [[.635,0],[1,0],[1,.215],[.615,.215]],
+    [[.625,.23],[1,.23],[1,.445],[.60,.445]],
+    [[0,.46],[1,.46],[1,.704],[0,.704]],
+  ];
   if (treatment.layout === 'hero') return [
     [[0,0],[.62,0],[.59,.46],[0,.46]], [[.64,0],[1,0],[1,.22],[.62,.22]],
     [[.63,.24],[1,.24],[1,.46],[.60,.46]], [[0,.48],[.48,.48],[.45,.70],[0,.70]],
@@ -79,7 +86,7 @@ function coverFrames(width, height) {
     [[.54,.35],[.77,.35],[.73,.70],[.50,.70]], [[.79,.35],[1,.35],[1,.70],[.75,.70]],
   ];
   if (treatment.layout === 'solo') return [landscape
-    ? [[.48,.034],[.974,.034],[.974,.869],[.48,.869]]
+    ? [[.38,.034],[.974,.034],[.974,.869],[.38,.869]]
     : [[.025,.025],[.975,.025],[.975,.704],[.025,.704]]];
   if (landscape) return [
     [[0,0],[.50,0],[.46,1],[0,1]], [[.52,0],[.75,0],[.73,.30],[.50,.30]],
@@ -639,18 +646,34 @@ function setSceneCrops(scene, width, height) {
     lead: rainLead
       ? [[0,1.08,65,0], [1,1,25,-12], [0,1.3,0,80], [1,1.3,100,72]]
       : [[0,1.70,65,0], [1,1.70,25,0], [2,1.45,62,0], [3,1.40,28,0], [4,1.20,64,12], [5,1.20,27,10], [6,1.12,58,11]],
-    story: [[2,1.45,62,0], [3,1.22,33,5], [4,1.18,65,4], [5,1.22,27,8], [6,1.10,60,8]],
+    story: [
+      [2,1.62,66,0,'teal',false],
+      [3,1.42,32,0,'mono',true],
+      [4,1.68,64,8,'sunset',true],
+      [3,2.70,100,50,'night',false],
+    ],
     solo: [[4,1.65,65,3]],
   };
   if (!scenes[scene] || photos.length < 2) return;
   frames = coverFrames(width, height).map((points, index) => {
     const crop = scenes[scene][index];
     if (!crop || !photos[crop[0]]) return newFrame(points, index);
-    const [photo, zoom, x, y] = crop;
+    const [photo, zoom, x, y, grade, flip] = crop;
     const frame = { points, photo, ...photos[photo].crop, zoom, x, y };
+    if (grade) frame.grade = grade;
+    if (flip !== undefined) frame.flip = flip;
     if ((scene === 'lead' && index > 0) || (scene === 'story' && index > 0)) {
       frame.tag = photos[photo].tag;
       frame.line = photos[photo].line;
+    }
+    if (scene === 'story') {
+      const roles = [
+        ['THE FIXER', 'OLD TOWN · CASE OPEN'],
+        ['THE VOICE', 'BLUE ROOM · ONE MORE'],
+        ['THE RIDER', 'NORTH CUT · FULL THROTTLE'],
+        ['FISHING LINE', 'EAST CHANNEL · NO WAKE'],
+      ];
+      [frame.tag, frame.line] = roles[index];
     }
     if (rainLead && index >= 2) {
       frame.tag = ['THE GETAWAY', 'EAST CHANNEL'][index - 2];
@@ -663,6 +686,7 @@ function setSceneCrops(scene, width, height) {
 async function start() {
   const params = new URLSearchParams(location.search);
   const poster = params.has('poster');
+  storyCut = params.get('scene') === 'story';
   if (poster) document.body.classList.add('poster-view');
   if (Object.hasOwn(gradePresets, params.get('grade'))) treatment.grade = params.get('grade');
   if (Object.hasOwn(layoutPresets, params.get('layout'))) treatment.layout = params.get('layout');
