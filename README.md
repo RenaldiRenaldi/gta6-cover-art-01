@@ -12,7 +12,7 @@ Boulevard and Pier supply the Driver, Fixer, Rider, Getaway, Lookout, Voice and 
 
 Rainline includes six layouts (including Slant Seven and Solo Poster), six global and per-panel grades, editable character tags and scene lines, Flip / Swap next, Undo / Redo and Surprise me. The default Hero lead pairs portrait frames with a getaway detail and an east-channel detail, all cropped from the bundled kit imagery. Neon Night adds rain streaks and wet-road reflections. Poster credits include editable review and source, seal and ring, volume ticket, barcode, release line, billing footer and tagline ribbon. New panels fill automatically from the local photo library.
 
-Each cast preset has its own crop. Fixer and Skipper use teal, Voice uses sunset, and the others follow the global grade (night by default). Hero uses four panels in landscape and five in portrait; the story poster uses a four-panel portrait cut with a face-free fishing-line detail. The solo poster keeps its closer Boulevard Rider portrait and “ONE FACE · NO WAY HOME” tagline. There are no illustrated cast assets; role presets vary crop, grade and orientation using the included photos.
+Each cast preset has its own crop, with every poster panel sharing the wet-neon Night grade. Hero uses four panels in landscape and five in portrait; the story poster uses a four-panel portrait cut with a face-free fishing-line detail. The solo poster keeps its closer Boulevard Rider portrait and “ONE FACE · NO WAY HOME” tagline. There are no illustrated cast assets; role presets vary crop and orientation using the included photos.
 
 ## Local verification
 

@@ -644,13 +644,13 @@ function setSceneCrops(scene, width, height) {
   const rainLead = scene === 'lead' && treatment.layout === 'hero' && width / height > 1.25;
   const scenes = {
     lead: rainLead
-      ? [[0,1.08,65,0], [1,1,25,-12], [0,1.3,0,80], [1,1.3,100,72]]
+      ? [[0,1.08,65,0], [1,1,25,-12], [1,2.40,100,100], [1,1.3,100,72]]
       : [[0,1.70,65,0], [1,1.70,25,0], [2,1.45,62,0], [3,1.40,28,0], [4,1.20,64,12], [5,1.20,27,10], [6,1.12,58,11]],
     story: [
-      [2,1.62,66,0,'teal',false],
-      [3,1.42,32,0,'mono',true],
-      [4,1.68,64,8,'sunset',true],
-      [3,2.70,100,50,'night',false],
+      [2,1.62,66,0,undefined,false],
+      [3,1.42,32,0,undefined,true],
+      [4,1.68,64,8,undefined,true],
+      [3,2.70,100,50,undefined,false],
     ],
     solo: [[4,1.65,65,3]],
   };
@@ -660,6 +660,7 @@ function setSceneCrops(scene, width, height) {
     if (!crop || !photos[crop[0]]) return newFrame(points, index);
     const [photo, zoom, x, y, grade, flip] = crop;
     const frame = { points, photo, ...photos[photo].crop, zoom, x, y };
+    if (scene === 'story') frame.grade = 'night';
     if (grade) frame.grade = grade;
     if (flip !== undefined) frame.flip = flip;
     if ((scene === 'lead' && index > 0) || (scene === 'story' && index > 0)) {
